@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UNCTAD ISDS Navigator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    background: #f5f5f5;
+    color: #1a1a1a;
+  }
+
+  header {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 16px; font-weight: 600; white-space: nowrap; }
+
+  #search-bar {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+  }
+  #search-bar input {
+    flex: 1;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  #search-bar button {
+    padding: 6px 14px;
+    background: #4a9eda;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #search-bar button:hover { background: #357ab8; }
+
+  #layout {
+    display: flex;
+    height: calc(100vh - 52px);
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .facet-group { margin-bottom: 14px; }
+  .facet-group h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  .facet-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .facet-item:hover { background: #f0f4f8; }
+  .facet-item.active { background: #dbeafe; font-weight: 600; }
+  .facet-item .val { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+  .facet-item .cnt { font-size: 11px; color: #999; flex-shrink: 0; }
+
+  /* Main */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #results-header {
+    padding: 8px 14px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #results-header .total { font-size: 13px; color: #555; }
+  #pagination { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+  #pagination button {
+    padding: 3px 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+  }
+  #pagination button:disabled { opacity: .4; cursor: default; }
+  #pagination button:hover:not(:disabled) { background: #f0f4f8; }
+
+  #table-wrap {
+    flex: 1;
+    overflow: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: #f0f4f8;
+    border-bottom: 2px solid #ccd;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+    color: #444;
+  }
+  tbody tr { border-bottom: 1px solid #eee; cursor: pointer; }
+  tbody tr:hover { background: #f7faff; }
+  td {
+    padding: 7px 10px;
+    vertical-align: top;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  td.wrap { white-space: normal; }
+  .status-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-pending   { background: #fef3c7; color: #92400e; }
+  .status-decided   { background: #d1fae5; color: #065f46; }
+  .status-settled   { background: #dbeafe; color: #1e40af; }
+  .status-withdrawn { background: #f3f4f6; color: #6b7280; }
+  .status-other     { background: #ede9fe; color: #5b21b6; }
+
+  /* Detail panel */
+  #detail-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 100;
+    justify-content: flex-end;
+  }
+  #detail-overlay.open { display: flex; }
+  #detail-panel {
+    width: min(640px, 100vw);
+    background: #fff;
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px 24px;
+    position: relative;
+  }
+  #detail-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+    border: none;
+    background: none;
+    line-height: 1;
+  }
+  #detail-close:hover { color: #000; }
+  #detail-panel h2 { font-size: 16px; margin-bottom: 4px; padding-right: 28px; }
+  #detail-panel .subtitle { color: #666; font-size: 13px; margin-bottom: 16px; }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+    margin-bottom: 16px;
+  }
+  .detail-field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #888;
+    margin-bottom: 2px;
+  }
+  .detail-field .val { font-size: 13px; line-height: 1.4; }
+  .detail-full { grid-column: 1 / -1; }
+  .detail-field a { color: #1a7ac7; text-decoration: none; }
+  .detail-field a:hover { text-decoration: underline; }
+
+  #empty { padding: 40px; text-align: center; color: #999; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ISDS Navigator</h1>
+  <div id="search-bar">
+    <input id="q" type="search" placeholder="Full-text search cases, parties, treaties…" autocomplete="off">
+    <button onclick="search(1)">Search</button>
+  </div>
+</header>
+
+<div id="layout">
+  <aside id="sidebar">
+    <div id="facets-container"></div>
+  </aside>
+
+  <div id="main">
+    <div id="results-header">
+      <span class="total" id="total-label">Loading…</span>
+      <div id="pagination">
+        <button id="prev-btn" onclick="goPage(-1)" disabled>&#8592; Prev</button>
+        <span id="page-label"></span>
+        <button id="next-btn" onclick="goPage(1)" disabled>Next &#8594;</button>
+      </div>
+    </div>
+
+    <div id="table-wrap">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Year</th>
+            <th>Short Name</th>
+            <th>Respondent</th>
+            <th>Home State</th>
+            <th>Applicable IIA</th>
+            <th>Status</th>
+            <th>Sector</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+      <div id="empty" style="display:none">No results found.</div>
+    </div>
+  </div>
+</div>
+
+<div id="detail-overlay">
+  <div id="detail-panel">
+    <button id="detail-close" onclick="closeDetail()">&times;</button>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+const state = { q: "", filters: {}, page: 1 };
+
+function statusClass(s) {
+  if (!s) return "status-other";
+  const l = s.toLowerCase();
+  if (l.includes("pending")) return "status-pending";
+  if (l.includes("decided") || l.includes("award") || l.includes("discontin")) return "status-decided";
+  if (l.includes("settled")) return "status-settled";
+  if (l.includes("withdrawn") || l.includes("discontinued")) return "status-withdrawn";
+  return "status-other";
+}
+
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s ?? "";
+  return d.innerHTML;
+}
+
+async function search(page = 1) {
+  state.q = document.getElementById("q").value.trim();
+  state.page = page;
+  const params = new URLSearchParams({ q: state.q, page });
+  for (const [k, v] of Object.entries(state.filters)) if (v) params.set(k, v);
+
+  const res = await fetch("/api/search?" + params);
+  const data = await res.json();
+  renderResults(data);
+}
+
+function renderResults({ total, page, per_page, rows }) {
+  const pages = Math.ceil(total / per_page);
+  document.getElementById("total-label").textContent =
+    `${total.toLocaleString()} cases`;
+  document.getElementById("page-label").textContent = `${page} / ${pages || 1}`;
+  document.getElementById("prev-btn").disabled = page <= 1;
+  document.getElementById("next-btn").disabled = page >= pages;
+
+  const tbody = document.getElementById("results-body");
+  const empty = document.getElementById("empty");
+
+  if (!rows.length) {
+    tbody.innerHTML = "";
+    empty.style.display = "";
+    return;
+  }
+  empty.style.display = "none";
+
+  tbody.innerHTML = rows.map(r => `
+    <tr onclick="showDetail(${r.no})">
+      <td>${r.no}</td>
+      <td>${r.year ?? ""}</td>
+      <td title="${esc(r.full_name)}">${esc(r.short_name)}</td>
+      <td>${esc(r.respondent_state)}</td>
+      <td>${esc(r.home_state)}</td>
+      <td title="${esc(r.applicable_iia)}">${esc(r.applicable_iia)}</td>
+      <td><span class="status-badge ${statusClass(r.status)}">${esc(r.status)}</span></td>
+      <td>${esc(r.sector)}</td>
+    </tr>
+  `).join("");
+}
+
+function goPage(delta) {
+  search(state.page + delta);
+}
+
+// --- Facets ---
+
+async function loadFacets() {
+  const res = await fetch("/api/facets");
+  const data = await res.json();
+  renderFacets(data);
+}
+
+const FACET_LABELS = {
+  year: "Year",
+  status: "Status",
+  respondent_state: "Respondent State",
+  home_state: "Home State",
+  sector: "Sector",
+  arbitral_rules: "Arbitral Rules",
+  institution: "Institution",
+};
+
+function renderFacets(data) {
+  const container = document.getElementById("facets-container");
+  container.innerHTML = "";
+
+  for (const [col, items] of Object.entries(data)) {
+    if (!items.length) continue;
+    const group = document.createElement("div");
+    group.className = "facet-group";
+    group.innerHTML = `<h3>${FACET_LABELS[col] ?? col}</h3>`;
+
+    items.slice(0, 20).forEach(({ value, count }) => {
+      const el = document.createElement("div");
+      el.className = "facet-item" + (state.filters[col] === value ? " active" : "");
+      el.title = value;
+      el.innerHTML = `<span class="val">${esc(value)}</span><span class="cnt">${count}</span>`;
+      el.onclick = () => {
+        if (state.filters[col] === value) {
+          delete state.filters[col];
+        } else {
+          state.filters[col] = value;
+        }
+        // Re-render active state
+        group.querySelectorAll(".facet-item").forEach(e => e.classList.remove("active"));
+        if (state.filters[col]) el.classList.add("active");
+        search(1);
+      };
+      group.appendChild(el);
+    });
+
+    container.appendChild(group);
+  }
+}
+
+// --- Detail panel ---
+
+function field(label, value, full = false) {
+  if (!value) return "";
+  return `
+    <div class="detail-field${full ? " detail-full" : ""}">
+      <label>${label}</label>
+      <div class="val">${esc(value)}</div>
+    </div>`;
+}
+
+function linkField(label, value) {
+  if (!value) return "";
+  const links = value.split(/[\n;]+/).map(u => u.trim()).filter(Boolean);
+  return `
+    <div class="detail-field detail-full">
+      <label>${label}</label>
+      <div class="val">${links.map(u => `<a href="${esc(u)}" target="_blank">${esc(u)}</a>`).join("<br>")}</div>
+    </div>`;
+}
+
+async function showDetail(no) {
+  const res = await fetch(`/api/case?no=${no}`);
+  const r = await res.json();
+
+  document.getElementById("detail-content").innerHTML = `
+    <h2>${esc(r.short_name)}</h2>
+    <div class="subtitle">${esc(r.full_name)}</div>
+
+    <div class="detail-grid">
+      ${field("Case No.", r.no)}
+      ${field("Year", r.year)}
+      ${field("Status", r.status)}
+      ${field("Respondent State", r.respondent_state)}
+      ${field("Home State of Investor", r.home_state)}
+      ${field("Applicable IIA", r.applicable_iia, true)}
+      ${field("Arbitral Rules", r.arbitral_rules)}
+      ${field("Institution", r.institution)}
+      ${field("Sector", r.sector)}
+      ${field("Subsector", r.subsector)}
+      ${field("Amount Claimed (M)", r.amount_claimed_m)}
+      ${field("Amount Awarded (M)", r.amount_awarded_m)}
+      ${field("IIA Breaches Alleged", r.breaches_alleged, true)}
+      ${field("IIA Breaches Found", r.breaches_found, true)}
+      ${field("Arbitrators", r.arbitrators, true)}
+      ${field("Decisions", r.decisions, true)}
+      ${field("Individual Opinions", r.individual_opinions, true)}
+      ${field("Follow-on Type", r.followon_type)}
+      ${field("Follow-on Status", r.followon_status)}
+      ${field("Follow-on Decisions", r.followon_decisions, true)}
+      ${field("Annulment Committee", r.annulment_committee, true)}
+      ${field("Summary", r.summary, true)}
+      ${field("Investment Details", r.investment_details, true)}
+      ${linkField("Italaw Link", r.italaw_link)}
+      ${linkField("Background Sources", r.background_sources)}
+    </div>
+  `;
+
+  document.getElementById("detail-overlay").classList.add("open");
+}
+
+function closeDetail() {
+  document.getElementById("detail-overlay").classList.remove("open");
+}
+
+document.getElementById("detail-overlay").addEventListener("click", e => {
+  if (e.target === document.getElementById("detail-overlay")) closeDetail();
+});
+
+document.getElementById("q").addEventListener("keydown", e => {
+  if (e.key === "Enter") search(1);
+});
+
+// Init
+loadFacets().then(() => search(1));
+</script>
+</body>
+</html>
