@@ -77,9 +77,36 @@ def facets() -> dict:
     return result
 
 
+def run_sql(sql: str) -> dict:
+    sql = sql.strip()
+    # Block anything that isn't a read
+    first = sql.upper().split()[0] if sql.split() else ""
+    if first not in ("SELECT", "WITH", "EXPLAIN", "PRAGMA"):
+        return {"error": "Only SELECT / WITH / EXPLAIN queries are allowed"}
+    try:
+        con = sqlite3.connect(DB)
+        con.row_factory = sqlite3.Row
+        cur = con.execute(sql)
+        rows = cur.fetchmany(2000)
+        cols = [d[0] for d in cur.description] if cur.description else []
+        con.close()
+        return {"columns": cols, "rows": [list(r) for r in rows], "count": len(rows)}
+    except sqlite3.Error as e:
+        return {"error": str(e)}
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print(f"  {self.address_string()} {fmt % args}")
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/api/sql":
+            length = int(self.headers.get("Content-Length", 0))
+            body = json.loads(self.rfile.read(length))
+            self._json(run_sql(body.get("sql", "")))
+        else:
+            self._error(404, "not found")
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
