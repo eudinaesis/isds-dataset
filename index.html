@@ -468,8 +468,79 @@
   }
   .chart-wrap { position: relative; height: 280px; }
   .chart-wrap-tall { position: relative; height: 340px; }
+
+  /* Guide tab */
+  #guide-view {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    background: #f5f5f5;
+  }
+  #guide-view.visible { display: block; }
+  #guide-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 28px 48px;
+    background: #fff;
+    min-height: 100%;
+    box-shadow: 0 0 0 1px #e5e7eb;
+  }
+  #guide-body h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #1a3a5c; }
+  #guide-body h2 { font-size: 16px; font-weight: 700; margin: 28px 0 10px; color: #1a3a5c; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; }
+  #guide-body h3 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; color: #333; }
+  #guide-body p  { margin: 0 0 10px; line-height: 1.65; color: #333; }
+  #guide-body ul, #guide-body ol { margin: 0 0 10px 20px; line-height: 1.7; color: #333; }
+  #guide-body li { margin-bottom: 3px; }
+  #guide-body strong { font-weight: 600; }
+  #guide-body em { font-style: italic; }
+  #guide-body code {
+    font-family: ui-monospace, "Cascadia Code", monospace;
+    font-size: 12px;
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a3a5c;
+  }
+  #guide-body pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 14px 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 10px 0 16px;
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+  #guide-body pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  #guide-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px;
+    font-size: 13px;
+  }
+  #guide-body th {
+    background: #f0f4f8;
+    text-align: left;
+    padding: 6px 10px;
+    border: 1px solid #dde;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  #guide-body td {
+    padding: 5px 10px;
+    border: 1px solid #e5e7eb;
+    vertical-align: top;
+    white-space: normal;
+    max-width: none;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  #guide-body hr { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+  #guide-body a { color: #1a7ac7; text-decoration: none; }
+  #guide-body a:hover { text-decoration: underline; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
 <body>
 
@@ -483,6 +554,7 @@
     <button class="tab-btn active" data-tab="browse" onclick="switchTab('browse')">Browse</button>
     <button class="tab-btn" data-tab="sql" onclick="switchTab('sql')">SQL</button>
     <button class="tab-btn" data-tab="viz" onclick="switchTab('viz')">Visualizations</button>
+    <button class="tab-btn" data-tab="guide" onclick="switchTab('guide')">Guide</button>
   </nav>
 </header>
 
@@ -549,6 +621,10 @@
         <div class="chart-wrap"><canvas id="chart-amounts"></canvas></div>
       </div>
     </div>
+  </div>
+
+  <div id="guide-view">
+    <div id="guide-body">Loading…</div>
   </div>
 
   <div id="sql-view">
@@ -872,10 +948,12 @@ function switchTab(tab) {
   const isBrowse = tab === "browse";
   const isSql    = tab === "sql";
   const isViz    = tab === "viz";
+  const isGuide  = tab === "guide";
   document.getElementById("sidebar").style.display      = isBrowse ? "" : "none";
   document.getElementById("main").style.display         = isBrowse ? "" : "none";
   document.getElementById("sql-view").classList.toggle("visible", isSql);
   document.getElementById("viz-view").classList.toggle("visible", isViz);
+  document.getElementById("guide-view").classList.toggle("visible", isGuide);
   document.getElementById("search-bar").style.visibility = isBrowse ? "" : "hidden";
   document.querySelectorAll(".tab-btn").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab)
@@ -887,6 +965,16 @@ function switchTab(tab) {
     document.getElementById("sql-input").focus();
   }
   if (isViz) renderViz();
+  if (isGuide) loadGuide();
+}
+
+let guideLoaded = false;
+async function loadGuide() {
+  if (guideLoaded) return;
+  const res = await fetch("/GUIDE.md");
+  const md = await res.text();
+  document.getElementById("guide-body").innerHTML = marked.parse(md);
+  guideLoaded = true;
 }
 
 // --- Visualizations ---
