@@ -369,20 +369,41 @@
     white-space: pre-wrap;
   }
 
-  /* Spain dashboard */
-  #spain-view {
+  /* Visualizations dashboard */
+  #viz-view {
     display: none;
     flex: 1;
     overflow-y: auto;
     padding: 20px 24px;
     background: #f5f5f5;
   }
-  #spain-view.visible { display: block; }
-  #spain-header {
+  #viz-view.visible { display: block; }
+  #viz-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  #viz-source-label {
     font-size: 13px;
     color: #555;
-    margin-bottom: 16px;
+    flex: 1;
+    min-width: 160px;
   }
+  #viz-presets { display: flex; gap: 6px; }
+  .viz-preset-btn {
+    padding: 4px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #444;
+  }
+  .viz-preset-btn:hover { background: #f0f4f8; border-color: #999; }
+  .viz-preset-btn.active { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
   .spain-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -418,7 +439,7 @@
   <nav id="tab-nav">
     <button class="tab-btn active" data-tab="browse" onclick="switchTab('browse')">Browse</button>
     <button class="tab-btn" data-tab="sql" onclick="switchTab('sql')">SQL</button>
-    <button class="tab-btn" data-tab="spain" onclick="switchTab('spain')">Spain</button>
+    <button class="tab-btn" data-tab="viz" onclick="switchTab('viz')">Visualizations</button>
   </nav>
 </header>
 
@@ -458,8 +479,15 @@
     </div>
   </div>
 
-  <div id="spain-view">
-    <div id="spain-header">Loading Spain data…</div>
+  <div id="viz-view">
+    <div id="viz-controls">
+      <div id="viz-source-label">Showing: <strong id="viz-source-text">loading…</strong></div>
+      <div id="viz-presets">
+        <button class="viz-preset-btn" id="preset-browse" onclick="loadVizPreset('browse')">Current Browse</button>
+        <button class="viz-preset-btn" id="preset-spain" onclick="loadVizPreset('spain')">Spain</button>
+        <button class="viz-preset-btn" id="preset-all" onclick="loadVizPreset('all')">All Cases</button>
+      </div>
+    </div>
     <div class="spain-grid">
       <div class="spain-card">
         <h3>Case Outcomes</h3>
@@ -544,6 +572,7 @@ async function search(page = 1) {
   const res = await fetch("/api/search?" + params);
   const data = await res.json();
   renderResults(data);
+  updateVizFromBrowse();
 }
 
 function renderResults({ total, page, per_page, rows }) {
@@ -768,38 +797,149 @@ document.getElementById("q").addEventListener("keydown", e => {
 
 // --- Tab switching ---
 
-let spainLoaded = false;
-
 function switchTab(tab) {
   const isBrowse = tab === "browse";
   const isSql    = tab === "sql";
-  const isSpain  = tab === "spain";
+  const isViz    = tab === "viz";
   document.getElementById("sidebar").style.display      = isBrowse ? "" : "none";
   document.getElementById("main").style.display         = isBrowse ? "" : "none";
   document.getElementById("sql-view").classList.toggle("visible", isSql);
-  document.getElementById("spain-view").classList.toggle("visible", isSpain);
+  document.getElementById("viz-view").classList.toggle("visible", isViz);
   document.getElementById("search-bar").style.visibility = isBrowse ? "" : "hidden";
   document.querySelectorAll(".tab-btn").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab)
   );
   if (isSql) document.getElementById("sql-input").focus();
-  if (isSpain && !spainLoaded) { spainLoaded = true; loadSpain(); }
+  if (isViz) renderViz();
 }
 
-// --- Spain dashboard ---
+// --- Visualizations ---
 
-async function loadSpain() {
-  const res  = await fetch("/api/spain");
+let vizRows = [];
+let vizLabel = "";
+let vizActivePreset = "browse";
+const vizCharts = {};
+
+function destroyVizCharts() {
+  for (const c of Object.values(vizCharts)) {
+    try { c.destroy(); } catch (_) {}
+  }
+  Object.keys(vizCharts).forEach(k => delete vizCharts[k]);
+}
+
+function parseUSD(s) {
+  if (!s || s.includes("Data not available")) return null;
+  let m = s.match(/\((\d+(?:\.\d+)?)\s+USD\)/);
+  if (m) return parseFloat(m[1]);
+  m = s.match(/^(\d+(?:\.\d+)?)\s+USD/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function splitHomeStates(s) {
+  if (!s) return [];
+  return s.split(/[;\n]+/).map(x => x.trim()).filter(Boolean);
+}
+
+function aggregateForViz(rows) {
+  const outcomeCounts = {};
+  for (const r of rows) {
+    const s = r.status || "Unknown";
+    outcomeCounts[s] = (outcomeCounts[s] || 0) + 1;
+  }
+  const outcomes = Object.entries(outcomeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, count]) => ({ label, count }));
+
+  const stateCounts = {};
+  for (const r of rows) {
+    for (const c of splitHomeStates(r.home_state)) {
+      stateCounts[c] = (stateCounts[c] || 0) + 1;
+    }
+  }
+  const homeStates = Object.entries(stateCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([country, count]) => ({ country, count }));
+
+  const OUTCOME_KEY = {
+    "Decided in favour of investor": "investor",
+    "Decided in favour of State":    "state",
+    "Pending":                        "pending",
+    "Discontinued for unknown reasons": "discontinued",
+  };
+  const yearsMap = {};
+  for (const r of rows) {
+    if (!r.year) continue;
+    if (!yearsMap[r.year]) yearsMap[r.year] = { year: r.year, investor: 0, state: 0, pending: 0, discontinued: 0 };
+    yearsMap[r.year][OUTCOME_KEY[r.status] || "investor"]++;
+  }
+  const byYear = Object.values(yearsMap).sort((a, b) => a.year - b.year);
+
+  const amounts = rows
+    .map(r => ({
+      no: r.no, name: r.short_name,
+      claimed_usd: parseUSD(r.amount_claimed_m),
+      awarded_usd: parseUSD(r.amount_awarded_m),
+      status: r.status, year: r.year,
+    }))
+    .filter(a => a.claimed_usd !== null)
+    .sort((a, b) => (b.claimed_usd || 0) - (a.claimed_usd || 0));
+
+  return { total: rows.length, outcomes, homeStates, byYear, amounts };
+}
+
+function renderViz() {
+  if (!vizRows.length) return;
+  destroyVizCharts();
+  const agg = aggregateForViz(vizRows);
+  document.getElementById("viz-source-text").textContent = vizLabel;
+  // Update preset button active state
+  document.querySelectorAll(".viz-preset-btn").forEach(b => b.classList.remove("active"));
+  const activeBtn = document.getElementById("preset-" + vizActivePreset);
+  if (activeBtn) activeBtn.classList.add("active");
+  renderOutcomes(agg.outcomes);
+  renderHomeStates(agg.homeStates);
+  renderByYear(agg.byYear);
+  renderAmounts(agg.amounts);
+}
+
+async function loadVizPreset(preset) {
+  vizActivePreset = preset;
+  if (preset === "spain") {
+    const res = await fetch("/api/search?respondent_state=Spain&all=1");
+    const data = await res.json();
+    vizRows = data.rows;
+    vizLabel = `Spain cases (${data.total})`;
+  } else if (preset === "all") {
+    const res = await fetch("/api/search?all=1");
+    const data = await res.json();
+    vizRows = data.rows;
+    vizLabel = `All cases (${data.total})`;
+  } else if (preset === "browse") {
+    // Re-fetch current browse params
+    await updateVizFromBrowse();
+  }
+  renderViz();
+}
+
+async function updateVizFromBrowse() {
+  vizActivePreset = "browse";
+  const params = new URLSearchParams({ q: state.q, all: "1" });
+  for (const [k, v] of Object.entries(state.filters)) if (v) params.set(k, v);
+  const res = await fetch("/api/search?" + params);
   const data = await res.json();
+  vizRows = data.rows;
+  const parts = [];
+  if (state.q) parts.push(`"${state.q}"`);
+  if (state.filters.respondent_state) parts.push(state.filters.respondent_state);
+  if (state.filters.enforcement_status) parts.push(ENF_LABELS[state.filters.enforcement_status] ?? state.filters.enforcement_status);
+  vizLabel = parts.length
+    ? `Browse: ${parts.join(", ")} (${data.total})`
+    : `Browse: All Cases (${data.total})`;
+  if (document.getElementById("viz-view").classList.contains("visible")) renderViz();
+}
 
-  document.getElementById("spain-header").innerHTML =
-    `<strong>${data.total} cases</strong> — Spain as respondent state &nbsp;·&nbsp; ` +
-    `Source: UNCTAD ISDS Navigator (through Dec 2023)`;
-
-  renderOutcomes(data.outcomes);
-  renderHomeStates(data.home_states);
-  renderByYear(data.by_year);
-  renderAmounts(data.amounts);
+function isCaseData(columns) {
+  return columns.includes("status") && columns.includes("year");
 }
 
 const OUTCOME_COLORS = {
@@ -810,7 +950,7 @@ const OUTCOME_COLORS = {
 };
 
 function renderOutcomes(outcomes) {
-  new Chart(document.getElementById("chart-outcomes"), {
+  vizCharts.outcomes = new Chart(document.getElementById("chart-outcomes"), {
     type: "doughnut",
     data: {
       labels: outcomes.map(o => o.label),
@@ -841,7 +981,7 @@ function renderOutcomes(outcomes) {
 
 function renderHomeStates(homeStates) {
   const top = homeStates.slice(0, 14);
-  new Chart(document.getElementById("chart-homestates"), {
+  vizCharts.homeStates = new Chart(document.getElementById("chart-homestates"), {
     type: "bar",
     data: {
       labels: top.map(s => s.country),
@@ -865,7 +1005,7 @@ function renderHomeStates(homeStates) {
 }
 
 function renderByYear(byYear) {
-  new Chart(document.getElementById("chart-byyear"), {
+  vizCharts.byYear = new Chart(document.getElementById("chart-byyear"), {
     type: "bar",
     data: {
       labels: byYear.map(y => y.year),
@@ -896,7 +1036,7 @@ function renderAmounts(amounts) {
   const maxAward = Math.max(...withBoth.map(a => a.awarded_usd), 100);
   const yMax = Math.ceil(maxAward * 1.3 / 50) * 50;
 
-  new Chart(document.getElementById("chart-amounts"), {
+  vizCharts.amounts = new Chart(document.getElementById("chart-amounts"), {
     type: "scatter",
     data: {
       datasets: [
@@ -980,6 +1120,17 @@ async function runSql() {
 
   statusEl.textContent = `${data.count} row${data.count !== 1 ? "s" : ""} · ${ms}ms`;
 
+  if (isCaseData(data.columns)) {
+    vizRows = data.rows.map(row => {
+      const obj = {};
+      data.columns.forEach((col, i) => obj[col] = row[i]);
+      return obj;
+    });
+    vizLabel = `SQL results (${data.count} rows)`;
+    vizActivePreset = "browse"; // clear preset highlight
+    if (document.getElementById("viz-view").classList.contains("visible")) renderViz();
+  }
+
   if (!data.rows.length) {
     resultEl.innerHTML = "<div style='padding:20px;color:#999'>No rows returned.</div>";
     return;
@@ -996,7 +1147,8 @@ document.getElementById("sql-input").addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runSql();
 });
 
-// Init
+// Init — default to Spain cases
+state.filters.respondent_state = "Spain";
 loadFacets().then(() => search(1));
 loadEnforcementIndex();
 </script>

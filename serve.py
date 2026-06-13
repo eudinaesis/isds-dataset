@@ -62,14 +62,18 @@ def query(params: dict) -> dict:
         args.append(enforcement_filter)
 
     where = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+    select = "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis"
+    all_rows = params.get("all") == "1"
 
-    count_sql = f"SELECT COUNT(*) {base} {where}"
-    total = con.execute(count_sql, args).fetchone()[0]
-
-    select = "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis" if q else \
-             "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis"
-    rows_sql = f"{select} {base} {where} ORDER BY cases.year DESC, cases.no ASC LIMIT ? OFFSET ?"
-    rows = [dict(r) for r in con.execute(rows_sql, args + [per_page, offset])]
+    if all_rows:
+        rows_sql = f"{select} {base} {where} ORDER BY cases.year DESC, cases.no ASC"
+        rows = [dict(r) for r in con.execute(rows_sql, args)]
+        total = len(rows)
+    else:
+        count_sql = f"SELECT COUNT(*) {base} {where}"
+        total = con.execute(count_sql, args).fetchone()[0]
+        rows_sql = f"{select} {base} {where} ORDER BY cases.year DESC, cases.no ASC LIMIT ? OFFSET ?"
+        rows = [dict(r) for r in con.execute(rows_sql, args + [per_page, offset])]
     con.close()
 
     return {"total": total, "page": page, "per_page": per_page, "rows": rows}
