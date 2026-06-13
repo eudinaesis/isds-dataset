@@ -237,11 +237,19 @@ class Handler(BaseHTTPRequestHandler):
                    WHERE cases.no = ?""",
                 [case_no],
             ).fetchone()
-            con.close()
-            if row:
-                self._json(dict(row))
-            else:
+            if not row:
+                con.close()
                 self._error(404, "not found")
+                return
+            result = dict(row)
+            proceedings = con.execute(
+                "SELECT forum, result, date_text, notes FROM enforcement_proceedings "
+                "WHERE case_no = ? ORDER BY id",
+                [case_no],
+            ).fetchall()
+            result["proceedings"] = [dict(p) for p in proceedings]
+            con.close()
+            self._json(result)
         else:
             self._error(404, "not found")
 

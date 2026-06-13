@@ -31,6 +31,20 @@ def run(con: sqlite3.Connection) -> None:
             updated_at         TEXT
         )
     """)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS enforcement_proceedings (
+            id         INTEGER PRIMARY KEY,
+            case_no    INTEGER NOT NULL REFERENCES cases(no),
+            forum      TEXT NOT NULL,
+            result     TEXT NOT NULL,
+            date_text  TEXT,
+            notes      TEXT,
+            updated_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    con.execute("""
+        CREATE INDEX IF NOT EXISTS ep_case_no ON enforcement_proceedings(case_no)
+    """)
     # Non-content-backed FTS so we can inject keyword synonyms per status
     con.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS research_notes_fts USING fts5(

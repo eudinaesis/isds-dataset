@@ -369,6 +369,49 @@
     white-space: pre-wrap;
   }
 
+  /* Enforcement proceedings timeline */
+  .proceedings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  .proceedings-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #888;
+    padding: 4px 8px 6px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+  }
+  .proceedings-table td {
+    padding: 6px 8px 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+    white-space: normal;
+    max-width: none;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  .proceedings-table tr:last-child td { border-bottom: none; }
+  .proc-result {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .proc-enforced      { background: #d1fae5; color: #065f46; }
+  .proc-dismissed     { background: #f3f4f6; color: #6b7280; }
+  .proc-pending       { background: #ede9fe; color: #5b21b6; }
+  .proc-set_aside     { background: #fee2e2; color: #991b1b; }
+  .proc-annulled      { background: #fee2e2; color: #991b1b; }
+  .proc-blocked       { background: #fee2e2; color: #991b1b; }
+  .proc-appeal_pending { background: #fef3c7; color: #92400e; }
+
   /* Visualizations dashboard */
   #viz-view {
     display: none;
@@ -733,6 +776,33 @@ async function showDetail(no) {
   const res = await fetch(`/api/case?no=${no}`);
   const r = await res.json();
 
+  const PROC_LABELS = {
+    enforced:       "Enforced",
+    dismissed:      "Dismissed",
+    pending:        "Pending",
+    set_aside:      "Set aside",
+    annulled:       "Annulled",
+    blocked:        "Blocked",
+    appeal_pending: "Appeal pending",
+  };
+
+  const procHtml = r.proceedings && r.proceedings.length ? `
+    <div class="research-section">
+      <h3>Enforcement Proceedings</h3>
+      <table class="proceedings-table">
+        <thead><tr><th>Forum</th><th>Result</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody>
+          ${r.proceedings.map(p => `
+            <tr>
+              <td>${esc(p.forum)}</td>
+              <td><span class="proc-result proc-${p.result}">${esc(PROC_LABELS[p.result] ?? p.result)}</span></td>
+              <td style="white-space:nowrap;color:#666">${esc(p.date_text ?? "")}</td>
+              <td style="color:#444">${esc(p.notes ?? "")}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>` : "";
+
   const researchHtml = r.enforcement_status ? `
     <div class="research-section">
       <h3>Research Notes</h3>
@@ -777,6 +847,7 @@ async function showDetail(no) {
       ${linkField("Italaw Link", r.italaw_link)}
       ${linkField("Background Sources", r.background_sources)}
     </div>
+    ${procHtml}
     ${researchHtml}
   `;
 
