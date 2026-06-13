@@ -2,6 +2,7 @@
 """Minimal HTTP server for the ISDS SQLite database. No dependencies beyond stdlib."""
 
 import json
+import os
 import sqlite3
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -9,7 +10,7 @@ from pathlib import Path
 
 DB = Path(__file__).parent / "isds.db"
 HTML = Path(__file__).parent / "index.html"
-PORT = 8123
+PORT = int(os.environ.get("PORT", 8123))
 
 SEARCHABLE_COLS = [
     "short_name", "full_name", "applicable_iia",
