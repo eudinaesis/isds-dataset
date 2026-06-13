@@ -809,7 +809,12 @@ function switchTab(tab) {
   document.querySelectorAll(".tab-btn").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab)
   );
-  if (isSql) document.getElementById("sql-input").focus();
+  if (isSql) {
+    if (!sqlUserEdited) {
+      document.getElementById("sql-input").value = buildBrowseSql();
+    }
+    document.getElementById("sql-input").focus();
+  }
   if (isViz) renderViz();
 }
 
@@ -1092,6 +1097,47 @@ function renderAmounts(amounts) {
 }
 
 // --- SQL ---
+
+function sqlLiteral(s) {
+  return "'" + String(s).replace(/'/g, "''") + "'";
+}
+
+function buildBrowseSql() {
+  const clauses = [];
+
+  if (state.q) {
+    clauses.push(
+      `(cases.no IN (SELECT rowid FROM cases_fts WHERE cases_fts MATCH ${sqlLiteral(state.q)})\n` +
+      `  OR cases.no IN (SELECT rowid FROM research_notes_fts WHERE research_notes_fts MATCH ${sqlLiteral(state.q)}))`
+    );
+  }
+
+  for (const [k, v] of Object.entries(state.filters)) {
+    if (!v) continue;
+    if (k === "enforcement_status") {
+      clauses.push(`rn.enforcement_status = ${sqlLiteral(v)}`);
+    } else {
+      clauses.push(`cases.${k} = ${sqlLiteral(v)}`);
+    }
+  }
+
+  const where = clauses.length
+    ? "\nWHERE " + clauses.join("\n  AND ")
+    : "";
+
+  return (
+    "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis\n" +
+    "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no" +
+    where +
+    "\nORDER BY cases.year DESC, cases.no ASC\nLIMIT 50"
+  );
+}
+
+let sqlUserEdited = false;
+
+document.getElementById("sql-input").addEventListener("input", () => {
+  sqlUserEdited = true;
+});
 
 async function runSql() {
   const sql = document.getElementById("sql-input").value.trim();
