@@ -12,6 +12,7 @@ from pathlib import Path
 DB = Path(__file__).parent / "isds.db"
 HTML = Path(__file__).parent / "index.html"
 GUIDE = Path(__file__).parent / "GUIDE.md"
+SPAIN_ANALYSIS = Path(__file__).parent / "SPAIN_ANALYSIS.md"
 PORT = int(os.environ.get("PORT", 8123))
 
 SEARCHABLE_COLS = [
@@ -215,6 +216,8 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(HTML, "text/html")
         elif path == "/GUIDE.md":
             self._serve_file(GUIDE, "text/plain")
+        elif path == "/SPAIN_ANALYSIS.md":
+            self._serve_file(SPAIN_ANALYSIS, "text/plain")
         elif path == "/api/search":
             self._json(query(params))
         elif path == "/api/facets":
