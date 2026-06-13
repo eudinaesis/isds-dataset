@@ -324,6 +324,51 @@
 
   #empty { padding: 40px; text-align: center; color: #999; }
 
+  /* Enforcement status badges */
+  .enf-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .enf-paid         { background: #d1fae5; color: #065f46; }
+  .enf-enforced     { background: #dbeafe; color: #1e40af; }
+  .enf-not_paid     { background: #fef3c7; color: #92400e; }
+  .enf-blocked      { background: #fee2e2; color: #991b1b; }
+  .enf-state_won    { background: #f3f4f6; color: #6b7280; }
+  .enf-discontinued { background: #f3f4f6; color: #9ca3af; }
+  .enf-pending      { background: #ede9fe; color: #5b21b6; }
+
+  /* Research notes in detail panel */
+  .research-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 2px solid #e5e7eb;
+  }
+  .research-section h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #666;
+    margin-bottom: 12px;
+  }
+  .research-field { margin-bottom: 12px; }
+  .research-field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #888;
+    margin-bottom: 3px;
+  }
+  .research-field .val {
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
   /* Spain dashboard */
   #spain-view {
     display: none;
@@ -403,6 +448,7 @@
             <th>Home State</th>
             <th>Applicable IIA</th>
             <th>Status</th>
+            <th>Enforcement</th>
             <th>Sector</th>
           </tr>
         </thead>
@@ -456,6 +502,22 @@
 
 <script>
 const state = { q: "", filters: {}, page: 1 };
+
+const ENF_LABELS = {
+  paid:         "Paid",
+  enforced:     "Enforced (unpaid)",
+  not_paid:     "Award unpaid",
+  blocked:      "Blocked / set aside",
+  state_won:    "State prevailed",
+  discontinued: "Discontinued",
+  pending:      "Pending",
+};
+
+function enfBadge(status) {
+  if (!status) return "";
+  const label = ENF_LABELS[status] ?? status;
+  return `<span class="enf-badge enf-${status}">${esc(label)}</span>`;
+}
 
 function statusClass(s) {
   if (!s) return "status-other";
@@ -511,6 +573,7 @@ function renderResults({ total, page, per_page, rows }) {
       <td>${esc(r.home_state)}</td>
       <td title="${esc(r.applicable_iia)}">${esc(r.applicable_iia)}</td>
       <td><span class="status-badge ${statusClass(r.status)}">${esc(r.status)}</span></td>
+      <td>${enfBadge(r.enforcement_status)}</td>
       <td>${esc(r.sector)}</td>
     </tr>
   `).join("");
@@ -537,6 +600,51 @@ const FACET_LABELS = {
   arbitral_rules: "Arbitral Rules",
   institution: "Institution",
 };
+
+// Enforcement facet is fetched separately and rendered after UNCTAD facets
+let enforcementIndex = {};   // case_no (string) → enforcement_status
+
+async function loadEnforcementIndex() {
+  const res = await fetch("/api/research");
+  enforcementIndex = await res.json();
+  renderEnforcementFacet();
+}
+
+function renderEnforcementFacet() {
+  const counts = {};
+  for (const status of Object.values(enforcementIndex)) {
+    counts[status] = (counts[status] ?? 0) + 1;
+  }
+  const container = document.getElementById("facets-container");
+  const group = document.createElement("div");
+  group.id = "enf-facet-group";
+  group.className = "facet-group";
+  group.innerHTML = `<h3>Enforcement</h3>`;
+
+  const ORDER = ["enforced","not_paid","blocked","paid","state_won","discontinued","pending"];
+  ORDER.forEach(status => {
+    if (!counts[status]) return;
+    const el = document.createElement("div");
+    el.className = "facet-item" + (state.filters["enforcement_status"] === status ? " active" : "");
+    el.innerHTML = `<span class="val">${enfBadge(status)}</span><span class="cnt">${counts[status]}</span>`;
+    el.onclick = () => {
+      if (state.filters["enforcement_status"] === status) {
+        delete state.filters["enforcement_status"];
+      } else {
+        state.filters["enforcement_status"] = status;
+      }
+      group.querySelectorAll(".facet-item").forEach(e => e.classList.remove("active"));
+      if (state.filters["enforcement_status"]) el.classList.add("active");
+      search(1);
+    };
+    group.appendChild(el);
+  });
+
+  // Insert before the first existing facet group
+  const first = container.firstChild;
+  if (first) container.insertBefore(group, first);
+  else container.appendChild(group);
+}
 
 function renderFacets(data) {
   const container = document.getElementById("facets-container");
@@ -596,6 +704,19 @@ async function showDetail(no) {
   const res = await fetch(`/api/case?no=${no}`);
   const r = await res.json();
 
+  const researchHtml = r.enforcement_status ? `
+    <div class="research-section">
+      <h3>Research Notes</h3>
+      <div class="research-field">
+        <label>Enforcement Status</label>
+        <div class="val">${enfBadge(r.enforcement_status)}</div>
+      </div>
+      ${r.enforcement_detail ? `<div class="research-field"><label>Enforcement Detail</label><div class="val">${esc(r.enforcement_detail)}</div></div>` : ""}
+      ${r.context          ? `<div class="research-field"><label>Context</label><div class="val">${esc(r.context)}</div></div>` : ""}
+      ${r.claim_basis      ? `<div class="research-field"><label>Claim Basis</label><div class="val">${esc(r.claim_basis)}</div></div>` : ""}
+      ${r.significance     ? `<div class="research-field"><label>Significance</label><div class="val">${esc(r.significance)}</div></div>` : ""}
+    </div>` : "";
+
   document.getElementById("detail-content").innerHTML = `
     <h2>${esc(r.short_name)}</h2>
     <div class="subtitle">${esc(r.full_name)}</div>
@@ -627,6 +748,7 @@ async function showDetail(no) {
       ${linkField("Italaw Link", r.italaw_link)}
       ${linkField("Background Sources", r.background_sources)}
     </div>
+    ${researchHtml}
   `;
 
   document.getElementById("detail-overlay").classList.add("open");
@@ -876,6 +998,7 @@ document.getElementById("sql-input").addEventListener("keydown", e => {
 
 // Init
 loadFacets().then(() => search(1));
+loadEnforcementIndex();
 </script>
 </body>
 </html>

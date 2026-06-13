@@ -48,17 +48,26 @@ def query(params: dict) -> dict:
             where_clauses.append(f"{col} = ?")
         args.append(val)
 
+    # Handle enforcement_status filter (lives in research_notes, not cases)
+    enforcement_filter = params.get("enforcement_status", "").strip()
+
     if q:
-        base = "FROM cases_fts JOIN cases ON cases.no = cases_fts.rowid"
+        base = ("FROM cases_fts JOIN cases ON cases.no = cases_fts.rowid "
+                "LEFT JOIN research_notes rn ON cases.no = rn.case_no")
     else:
-        base = "FROM cases"
+        base = "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no"
+
+    if enforcement_filter:
+        where_clauses.append("rn.enforcement_status = ?")
+        args.append(enforcement_filter)
 
     where = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
 
     count_sql = f"SELECT COUNT(*) {base} {where}"
     total = con.execute(count_sql, args).fetchone()[0]
 
-    select = "SELECT cases.*" if q else "SELECT *"
+    select = "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis" if q else \
+             "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis"
     rows_sql = f"{select} {base} {where} ORDER BY cases.year DESC, cases.no ASC LIMIT ? OFFSET ?"
     rows = [dict(r) for r in con.execute(rows_sql, args + [per_page, offset])]
     con.close()
@@ -95,6 +104,16 @@ def run_sql(sql: str) -> dict:
         return {"columns": cols, "rows": [list(r) for r in rows], "count": len(rows)}
     except sqlite3.Error as e:
         return {"error": str(e)}
+
+
+def research_index() -> dict:
+    """Return enforcement_status for every case that has research notes."""
+    con = sqlite3.connect(DB)
+    rows = con.execute(
+        "SELECT case_no, enforcement_status FROM research_notes"
+    ).fetchall()
+    con.close()
+    return {str(r[0]): r[1] for r in rows}
 
 
 def spain_data() -> dict:
@@ -199,6 +218,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(facets())
         elif path == "/api/spain":
             self._json(spain_data())
+        elif path == "/api/research":
+            self._json(research_index())
         elif path == "/api/case":
             case_no = params.get("no")
             if not case_no:
@@ -206,7 +227,16 @@ class Handler(BaseHTTPRequestHandler):
                 return
             con = sqlite3.connect(DB)
             con.row_factory = sqlite3.Row
-            row = con.execute("SELECT * FROM cases WHERE no = ?", [case_no]).fetchone()
+            row = con.execute(
+                """SELECT cases.*,
+                          rn.enforcement_status, rn.enforcement_detail,
+                          rn.amount_paid_usd_m, rn.context,
+                          rn.claim_basis, rn.significance, rn.updated_at AS research_updated_at
+                   FROM cases
+                   LEFT JOIN research_notes rn ON cases.no = rn.case_no
+                   WHERE cases.no = ?""",
+                [case_no],
+            ).fetchone()
             con.close()
             if row:
                 self._json(dict(row))
