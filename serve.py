@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import sqlite3
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -96,6 +97,82 @@ def run_sql(sql: str) -> dict:
         return {"error": str(e)}
 
 
+def spain_data() -> dict:
+    con = sqlite3.connect(DB)
+    con.row_factory = sqlite3.Row
+    rows = [dict(r) for r in con.execute(
+        "SELECT no, short_name, year, status, home_state, amount_claimed_m, amount_awarded_m "
+        "FROM cases WHERE respondent_state LIKE '%Spain%'"
+    ).fetchall()]
+    con.close()
+
+    outcome_counts: dict[str, int] = {}
+    for r in rows:
+        s = r["status"] or "Unknown"
+        outcome_counts[s] = outcome_counts.get(s, 0) + 1
+    outcomes = [{"label": k, "count": v}
+                for k, v in sorted(outcome_counts.items(), key=lambda x: -x[1])]
+
+    state_counts: dict[str, int] = {}
+    for r in rows:
+        parts = [p.strip() for p in re.split(r"[;\n]+", r["home_state"] or "") if p.strip()]
+        for p in parts:
+            state_counts[p] = state_counts.get(p, 0) + 1
+    home_states = sorted(
+        [{"country": k, "count": v} for k, v in state_counts.items()],
+        key=lambda x: -x["count"],
+    )
+
+    OUTCOME_KEY = {
+        "Decided in favour of investor": "investor",
+        "Decided in favour of State": "state",
+        "Pending": "pending",
+        "Discontinued for unknown reasons": "discontinued",
+    }
+    years_map: dict[int, dict] = {}
+    for r in rows:
+        yr = r["year"]
+        if yr not in years_map:
+            years_map[yr] = {"year": yr, "investor": 0, "state": 0, "pending": 0, "discontinued": 0}
+        key = OUTCOME_KEY.get(r["status"] or "", "investor")
+        years_map[yr][key] += 1
+    by_year = sorted(years_map.values(), key=lambda x: x["year"])
+
+    def parse_usd(s: str | None) -> float | None:
+        if not s or "Data not available" in s:
+            return None
+        m = re.search(r'\((\d+(?:\.\d+)?)\s+USD\)', s)
+        if m:
+            return float(m.group(1))
+        m = re.search(r'(\d+(?:\.\d+)?)\s+USD', s)
+        if m:
+            return float(m.group(1))
+        return None
+
+    amounts = []
+    for r in rows:
+        claimed = parse_usd(r["amount_claimed_m"])
+        if claimed is None:
+            continue
+        amounts.append({
+            "no": r["no"],
+            "name": r["short_name"],
+            "claimed_usd": claimed,
+            "awarded_usd": parse_usd(r["amount_awarded_m"]),
+            "status": r["status"],
+            "year": r["year"],
+        })
+    amounts.sort(key=lambda x: -(x["claimed_usd"] or 0))
+
+    return {
+        "total": len(rows),
+        "outcomes": outcomes,
+        "home_states": home_states,
+        "by_year": by_year,
+        "amounts": amounts,
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print(f"  {self.address_string()} {fmt % args}")
@@ -120,6 +197,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(query(params))
         elif path == "/api/facets":
             self._json(facets())
+        elif path == "/api/spain":
+            self._json(spain_data())
         elif path == "/api/case":
             case_no = params.get("no")
             if not case_no:
