@@ -37,26 +37,22 @@ def query(params: dict) -> dict:
     where_clauses = []
     args = []
 
+    # Always join research_notes; FTS handled via subquery so base never changes
+    base = "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no"
+
     if q:
-        where_clauses.append("cases_fts MATCH ?")
-        args.append(q)
+        where_clauses.append(
+            "(cases.no IN (SELECT rowid FROM cases_fts WHERE cases_fts MATCH ?) "
+            "OR cases.no IN (SELECT rowid FROM research_notes_fts WHERE research_notes_fts MATCH ?))"
+        )
+        args.extend([q, q])
 
     for col, val in filters.items():
-        if q:
-            where_clauses.append(f"cases.{col} = ?")
-        else:
-            where_clauses.append(f"{col} = ?")
+        where_clauses.append(f"cases.{col} = ?")
         args.append(val)
 
     # Handle enforcement_status filter (lives in research_notes, not cases)
     enforcement_filter = params.get("enforcement_status", "").strip()
-
-    if q:
-        base = ("FROM cases_fts JOIN cases ON cases.no = cases_fts.rowid "
-                "LEFT JOIN research_notes rn ON cases.no = rn.case_no")
-    else:
-        base = "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no"
-
     if enforcement_filter:
         where_clauses.append("rn.enforcement_status = ?")
         args.append(enforcement_filter)

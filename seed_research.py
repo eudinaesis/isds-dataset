@@ -357,7 +357,9 @@ ROWS = [
 NOW = datetime.utcnow().isoformat(timespec="seconds")
 
 if __name__ == "__main__":
+    import migrate
     con = sqlite3.connect(DB)
+    migrate.run(con)  # ensure tables exist
     con.executemany(
         """INSERT OR REPLACE INTO research_notes
            (case_no, enforcement_status, enforcement_detail, context, claim_basis, significance, updated_at)
@@ -366,5 +368,6 @@ if __name__ == "__main__":
     )
     con.commit()
     count = con.execute("SELECT COUNT(*) FROM research_notes").fetchone()[0]
+    n_fts = migrate.rebuild_fts(con)
     con.close()
-    print(f"Seeded {count} research notes.")
+    print(f"Seeded {count} research notes, {n_fts} FTS rows indexed.")
