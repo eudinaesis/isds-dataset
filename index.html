@@ -637,63 +637,7 @@
     color: #666;
     margin-bottom: 14px;
   }
-  .wf-field { margin-bottom: 14px; }
-  .wf-field label {
-    display: block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #888;
-    margin-bottom: 4px;
-  }
-  .wf-field input[type="password"] {
-    width: 100%;
-    padding: 7px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 13px;
-    background: #fff;
-    color: #1a1a1a;
-  }
-  .wf-field input[type="password"]:focus { outline: none; border-color: #4a9eda; }
-  .wf-field select, .wf-field textarea {
-    width: 100%;
-    padding: 7px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 13px;
-    background: #fff;
-    color: #1a1a1a;
-    line-height: 1.5;
-    font-family: system-ui, -apple-system, sans-serif;
-    resize: vertical;
-  }
-  .wf-field select:focus, .wf-field textarea:focus {
-    outline: none;
-    border-color: #4a9eda;
-  }
-  .wf-save-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-top: 8px;
-  }
-  #wf-save-btn {
-    padding: 7px 20px;
-    background: #1a3a5c;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  #wf-save-btn:hover:not(:disabled) { background: #2a5a8c; }
-  #wf-save-btn:disabled { opacity: .5; cursor: default; }
-  #wf-save-btn.dirty { background: #d97706; }
-  #wf-save-btn.dirty:hover { background: #b45309; }
-  #wf-save-status { font-size: 12px; color: #10b981; }
-  .wf-timestamp { margin-left: auto; font-size: 11px; color: #999; white-space: nowrap; }
+  .wf-timestamp { font-size: 11px; color: #999; }
 
   /* Hidden by default; toggled on mobile */
   #sidebar-overlay { display: none; }
@@ -832,7 +776,7 @@
     <button class="tab-btn" data-tab="sql" onclick="switchTab('sql')">SQL</button>
     <button class="tab-btn" data-tab="viz" onclick="switchTab('viz')">Visualizations</button>
     <button class="tab-btn" data-tab="guide" onclick="switchTab('guide')">Guide</button>
-    <button class="tab-btn" data-tab="workflow" onclick="switchTab('workflow')">Workflow</button>
+    <button class="tab-btn" data-tab="workflow" onclick="switchTab('workflow')">Case Browser</button>
   </nav>
 </header>
 
@@ -919,45 +863,7 @@
         <div id="wf-case-info">Loading…</div>
       </div>
       <div id="wf-notes-panel">
-        <h3>Research Notes</h3>
-        <div class="wf-field">
-          <label>Enforcement Status</label>
-          <select id="wf-enf-status">
-            <option value="">— not set —</option>
-            <option value="paid">Paid</option>
-            <option value="enforced">Enforced (unpaid)</option>
-            <option value="not_paid">Award unpaid</option>
-            <option value="blocked">Blocked / set aside</option>
-            <option value="state_won">State prevailed</option>
-            <option value="discontinued">Discontinued</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-        <div class="wf-field">
-          <label>Enforcement Detail</label>
-          <textarea id="wf-enf-detail" rows="5" placeholder="Enforcement proceedings, court actions, payment status…"></textarea>
-        </div>
-        <div class="wf-field">
-          <label>Context</label>
-          <textarea id="wf-context" rows="4" placeholder="Background on the investment and dispute…"></textarea>
-        </div>
-        <div class="wf-field">
-          <label>Claim Basis</label>
-          <textarea id="wf-claim-basis" rows="3" placeholder="Treaty provisions, legal theory…"></textarea>
-        </div>
-        <div class="wf-field">
-          <label>Significance</label>
-          <textarea id="wf-significance" rows="3" placeholder="Why this case matters…"></textarea>
-        </div>
-        <div class="wf-field">
-          <label>Write Token</label>
-          <input type="password" id="wf-token" placeholder="Required in production" autocomplete="off">
-        </div>
-        <div class="wf-save-row">
-          <button id="wf-save-btn" onclick="saveNotes()">Save</button>
-          <span id="wf-save-status"></span>
-          <span id="wf-updated" class="wf-timestamp"></span>
-        </div>
+        <div id="wf-notes-content"></div>
       </div>
     </div>
   </div>
@@ -1644,16 +1550,12 @@ function renderAmounts(amounts) {
   });
 }
 
-// --- Workflow ---
+// --- Case Browser ---
 
 let wfCases = [];
 let wfIndex = 0;
-let wfDirty = false;
 
 async function loadWorkflow() {
-  // Restore token from session so user doesn't have to re-enter after tab switching
-  const saved = sessionStorage.getItem("wf_token");
-  if (saved) document.getElementById("wf-token").value = saved;
   if (wfCases.length) { renderWfCase(); return; }
   document.getElementById("wf-case-info").textContent = "Loading…";
   const res = await fetch("/api/workflow");
@@ -1666,19 +1568,12 @@ async function loadWorkflow() {
 }
 
 function wfGo(delta) {
-  if (wfDirty && !confirm("Unsaved changes. Navigate anyway?")) return;
   wfIndex = Math.max(0, Math.min(wfCases.length - 1, wfIndex + delta));
-  wfDirty = false;
   renderWfCase();
 }
 
 function wfJump(val) {
-  if (wfDirty && !confirm("Unsaved changes. Navigate anyway?")) {
-    document.getElementById("wf-case-select").value = wfIndex;
-    return;
-  }
   wfIndex = parseInt(val, 10);
-  wfDirty = false;
   renderWfCase();
 }
 
@@ -1715,92 +1610,28 @@ function renderWfCase() {
     </div>
   `;
 
-  document.getElementById("wf-enf-status").value  = c.enforcement_status  ?? "";
-  document.getElementById("wf-enf-detail").value  = c.enforcement_detail  ?? "";
-  document.getElementById("wf-context").value     = c.context             ?? "";
-  document.getElementById("wf-claim-basis").value = c.claim_basis         ?? "";
-  document.getElementById("wf-significance").value= c.significance        ?? "";
-  document.getElementById("wf-updated").textContent = c.research_updated_at
-    ? `Saved ${c.research_updated_at.slice(0, 10)}`
-    : "Not yet saved";
-  document.getElementById("wf-save-status").textContent = "";
-  document.getElementById("wf-save-status").style.color = "#10b981";
-  wfDirty = false;
-  document.getElementById("wf-save-btn").classList.remove("dirty");
+  const noteFields = [
+    c.enforcement_status ? `<div class="research-field"><label>Enforcement Status</label><div class="val">${enfBadge(c.enforcement_status)}</div></div>` : "",
+    c.enforcement_detail ? `<div class="research-field"><label>Enforcement Detail</label><div class="val">${esc(c.enforcement_detail)}</div></div>` : "",
+    c.context            ? `<div class="research-field"><label>Context</label><div class="val">${esc(c.context)}</div></div>` : "",
+    c.claim_basis        ? `<div class="research-field"><label>Claim Basis</label><div class="val">${esc(c.claim_basis)}</div></div>` : "",
+    c.significance       ? `<div class="research-field"><label>Significance</label><div class="val">${esc(c.significance)}</div></div>` : "",
+  ].filter(Boolean).join("");
+
+  document.getElementById("wf-notes-content").innerHTML = noteFields
+    ? `<div class="research-section"><h3>Research Notes</h3>${noteFields}${
+        c.research_updated_at
+          ? `<div class="wf-timestamp" style="margin-top:10px">Updated ${c.research_updated_at.slice(0,10)}</div>`
+          : ""
+      }</div>`
+    : `<div style="color:#999;font-size:13px;padding:16px 0">No research notes for this case.</div>`;
 }
 
-function wfMarkDirty() {
-  if (!wfDirty) {
-    wfDirty = true;
-    document.getElementById("wf-save-btn").classList.add("dirty");
-  }
-}
-
-async function saveNotes() {
-  const c = wfCases[wfIndex];
-  const body = {
-    case_no:            c.no,
-    enforcement_status: document.getElementById("wf-enf-status").value  || null,
-    enforcement_detail: document.getElementById("wf-enf-detail").value  || null,
-    context:            document.getElementById("wf-context").value     || null,
-    claim_basis:        document.getElementById("wf-claim-basis").value || null,
-    significance:       document.getElementById("wf-significance").value|| null,
-  };
-  const btn = document.getElementById("wf-save-btn");
-  btn.textContent = "Saving…";
-  btn.disabled = true;
-
-  const token = document.getElementById("wf-token").value.trim();
-  sessionStorage.setItem("wf_token", token);
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch("/api/notes", {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  btn.textContent = "Save";
-  btn.disabled = false;
-
-  const statusEl = document.getElementById("wf-save-status");
-  if (res.status === 401) {
-    statusEl.style.color = "#b91c1c";
-    statusEl.textContent = "Wrong token";
-    return;
-  }
-  if (data.ok) {
-    Object.assign(wfCases[wfIndex], body, { research_updated_at: data.updated_at });
-    wfDirty = false;
-    btn.classList.remove("dirty");
-    document.getElementById("wf-updated").textContent = `Saved ${data.updated_at.slice(0, 10)}`;
-    statusEl.style.color = "#10b981";
-    statusEl.textContent = "✓ Saved";
-    enforcementIndex[String(c.no)] = body.enforcement_status;
-    setTimeout(() => { statusEl.textContent = ""; }, 2000);
-  } else {
-    statusEl.style.color = "#b91c1c";
-    statusEl.textContent = "Error: " + (data.error ?? "unknown");
-  }
-}
-
-// Wire up dirty detection on all form fields
-["wf-enf-status", "wf-enf-detail", "wf-context", "wf-claim-basis", "wf-significance"].forEach(id => {
-  document.getElementById(id).addEventListener("input",  wfMarkDirty);
-  document.getElementById(id).addEventListener("change", wfMarkDirty);
-});
-
-// Keyboard shortcuts (arrow keys to navigate, Cmd/Ctrl+S to save)
+// Arrow-key navigation in Case Browser
 document.addEventListener("keydown", e => {
   if (!document.getElementById("workflow-view").classList.contains("visible")) return;
   const tag = document.activeElement?.tagName;
-  const inField = tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT";
-  if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-    e.preventDefault();
-    saveNotes();
-    return;
-  }
-  if (inField) return;
+  if (tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT") return;
   if (e.key === "ArrowLeft")  { e.preventDefault(); wfGo(-1); }
   if (e.key === "ArrowRight") { e.preventDefault(); wfGo(1); }
 });
