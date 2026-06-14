@@ -545,6 +545,146 @@
   #guide-body a { color: #1a7ac7; text-decoration: none; }
   #guide-body a:hover { text-decoration: underline; }
 
+  /* Workflow view */
+  #workflow-view {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    background: #f5f5f5;
+  }
+  #workflow-view.visible { display: flex; }
+
+  #wf-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    background: #1a3a5c;
+    color: #fff;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  #wf-nav button {
+    padding: 5px 14px;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  #wf-nav button:hover:not(:disabled) { background: rgba(255,255,255,.25); }
+  #wf-nav button:disabled { opacity: .4; cursor: default; }
+  #wf-position { font-size: 13px; white-space: nowrap; }
+  #wf-case-select {
+    flex: 1;
+    max-width: 340px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 4px;
+    background: rgba(0,0,0,.25);
+    color: #fff;
+    font-size: 13px;
+  }
+  #wf-case-select option { background: #1a3a5c; }
+
+  #wf-body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  #wf-case-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+  }
+  #wf-case-panel h2 { font-size: 18px; margin-bottom: 4px; }
+  #wf-case-panel .wf-subtitle { font-size: 13px; color: #555; margin-bottom: 14px; }
+  .wf-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+  }
+  .wf-meta-field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #888;
+    margin-bottom: 2px;
+  }
+  .wf-meta-field .val { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+  .wf-meta-full { grid-column: 1 / -1; }
+  .wf-meta-field a { color: #1a7ac7; text-decoration: none; }
+  .wf-meta-field a:hover { text-decoration: underline; }
+
+  #wf-notes-panel {
+    width: 360px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 16px 18px;
+    background: #fafafa;
+  }
+  #wf-notes-panel h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #666;
+    margin-bottom: 14px;
+  }
+  .wf-field { margin-bottom: 14px; }
+  .wf-field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .wf-field select, .wf-field textarea {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    color: #1a1a1a;
+    line-height: 1.5;
+    font-family: system-ui, -apple-system, sans-serif;
+    resize: vertical;
+  }
+  .wf-field select:focus, .wf-field textarea:focus {
+    outline: none;
+    border-color: #4a9eda;
+  }
+  .wf-save-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 8px;
+  }
+  #wf-save-btn {
+    padding: 7px 20px;
+    background: #1a3a5c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  #wf-save-btn:hover:not(:disabled) { background: #2a5a8c; }
+  #wf-save-btn:disabled { opacity: .5; cursor: default; }
+  #wf-save-btn.dirty { background: #d97706; }
+  #wf-save-btn.dirty:hover { background: #b45309; }
+  #wf-save-status { font-size: 12px; color: #10b981; }
+  .wf-timestamp { margin-left: auto; font-size: 11px; color: #999; white-space: nowrap; }
+
   /* Hidden by default; toggled on mobile */
   #sidebar-overlay { display: none; }
   #cards-list { display: none; }
@@ -658,6 +798,12 @@
 
     /* SQL: tighter */
     #sql-editor-wrap { padding: 10px 12px 0; }
+
+    /* Workflow: stack vertically on mobile */
+    #wf-body { flex-direction: column; overflow-y: auto; }
+    #wf-case-panel { border-right: none; border-bottom: 1px solid #e0e0e0; overflow-y: visible; }
+    #wf-notes-panel { width: 100%; overflow-y: visible; }
+    #wf-case-select { max-width: 160px; }
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -676,6 +822,7 @@
     <button class="tab-btn" data-tab="sql" onclick="switchTab('sql')">SQL</button>
     <button class="tab-btn" data-tab="viz" onclick="switchTab('viz')">Visualizations</button>
     <button class="tab-btn" data-tab="guide" onclick="switchTab('guide')">Guide</button>
+    <button class="tab-btn" data-tab="workflow" onclick="switchTab('workflow')">Workflow</button>
   </nav>
 </header>
 
@@ -748,6 +895,57 @@
 
   <div id="guide-view">
     <div id="guide-body">Loading…</div>
+  </div>
+
+  <div id="workflow-view">
+    <div id="wf-nav">
+      <button id="wf-prev" onclick="wfGo(-1)">← Prev</button>
+      <span id="wf-position"></span>
+      <select id="wf-case-select" onchange="wfJump(this.value)"></select>
+      <button id="wf-next" onclick="wfGo(1)">Next →</button>
+    </div>
+    <div id="wf-body">
+      <div id="wf-case-panel">
+        <div id="wf-case-info">Loading…</div>
+      </div>
+      <div id="wf-notes-panel">
+        <h3>Research Notes</h3>
+        <div class="wf-field">
+          <label>Enforcement Status</label>
+          <select id="wf-enf-status">
+            <option value="">— not set —</option>
+            <option value="paid">Paid</option>
+            <option value="enforced">Enforced (unpaid)</option>
+            <option value="not_paid">Award unpaid</option>
+            <option value="blocked">Blocked / set aside</option>
+            <option value="state_won">State prevailed</option>
+            <option value="discontinued">Discontinued</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <div class="wf-field">
+          <label>Enforcement Detail</label>
+          <textarea id="wf-enf-detail" rows="5" placeholder="Enforcement proceedings, court actions, payment status…"></textarea>
+        </div>
+        <div class="wf-field">
+          <label>Context</label>
+          <textarea id="wf-context" rows="4" placeholder="Background on the investment and dispute…"></textarea>
+        </div>
+        <div class="wf-field">
+          <label>Claim Basis</label>
+          <textarea id="wf-claim-basis" rows="3" placeholder="Treaty provisions, legal theory…"></textarea>
+        </div>
+        <div class="wf-field">
+          <label>Significance</label>
+          <textarea id="wf-significance" rows="3" placeholder="Why this case matters…"></textarea>
+        </div>
+        <div class="wf-save-row">
+          <button id="wf-save-btn" onclick="saveNotes()">Save</button>
+          <span id="wf-save-status"></span>
+          <span id="wf-updated" class="wf-timestamp"></span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="sql-view">
@@ -1100,27 +1298,28 @@ document.getElementById("q").addEventListener("keydown", e => {
 // --- Tab switching ---
 
 function switchTab(tab) {
-  const isBrowse = tab === "browse";
-  const isSql    = tab === "sql";
-  const isViz    = tab === "viz";
-  const isGuide  = tab === "guide";
-  document.getElementById("sidebar").style.display      = isBrowse ? "" : "none";
-  document.getElementById("main").style.display         = isBrowse ? "" : "none";
+  const isBrowse   = tab === "browse";
+  const isSql      = tab === "sql";
+  const isViz      = tab === "viz";
+  const isGuide    = tab === "guide";
+  const isWorkflow = tab === "workflow";
+  document.getElementById("sidebar").style.display       = isBrowse ? "" : "none";
+  document.getElementById("main").style.display          = isBrowse ? "" : "none";
   document.getElementById("sql-view").classList.toggle("visible", isSql);
   document.getElementById("viz-view").classList.toggle("visible", isViz);
   document.getElementById("guide-view").classList.toggle("visible", isGuide);
+  document.getElementById("workflow-view").classList.toggle("visible", isWorkflow);
   document.getElementById("search-bar").style.visibility = isBrowse ? "" : "hidden";
   document.querySelectorAll(".tab-btn").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab)
   );
   if (isSql) {
-    if (!sqlUserEdited) {
-      document.getElementById("sql-input").value = buildBrowseSql();
-    }
+    if (!sqlUserEdited) document.getElementById("sql-input").value = buildBrowseSql();
     document.getElementById("sql-input").focus();
   }
   if (isViz) renderViz();
   if (isGuide) loadGuide();
+  if (isWorkflow) loadWorkflow();
 }
 
 let guideLoaded = false;
@@ -1430,6 +1629,155 @@ function renderAmounts(amounts) {
     },
   });
 }
+
+// --- Workflow ---
+
+let wfCases = [];
+let wfIndex = 0;
+let wfDirty = false;
+
+async function loadWorkflow() {
+  if (wfCases.length) { renderWfCase(); return; }
+  document.getElementById("wf-case-info").textContent = "Loading…";
+  const res = await fetch("/api/workflow");
+  wfCases = await res.json();
+  const sel = document.getElementById("wf-case-select");
+  sel.innerHTML = wfCases.map((c, i) =>
+    `<option value="${i}">${esc(c.short_name)} (${c.year ?? "?"})</option>`
+  ).join("");
+  renderWfCase();
+}
+
+function wfGo(delta) {
+  if (wfDirty && !confirm("Unsaved changes. Navigate anyway?")) return;
+  wfIndex = Math.max(0, Math.min(wfCases.length - 1, wfIndex + delta));
+  wfDirty = false;
+  renderWfCase();
+}
+
+function wfJump(val) {
+  if (wfDirty && !confirm("Unsaved changes. Navigate anyway?")) {
+    document.getElementById("wf-case-select").value = wfIndex;
+    return;
+  }
+  wfIndex = parseInt(val, 10);
+  wfDirty = false;
+  renderWfCase();
+}
+
+function wfMetaField(label, value, full) {
+  if (!value) return "";
+  return `<div class="wf-meta-field${full ? " wf-meta-full" : ""}">
+    <label>${label}</label><div class="val">${esc(value)}</div>
+  </div>`;
+}
+
+function renderWfCase() {
+  const c = wfCases[wfIndex];
+  document.getElementById("wf-position").textContent = `${wfIndex + 1} / ${wfCases.length}`;
+  document.getElementById("wf-prev").disabled = wfIndex === 0;
+  document.getElementById("wf-next").disabled = wfIndex === wfCases.length - 1;
+  document.getElementById("wf-case-select").value = wfIndex;
+
+  const italaw = c.italaw_link
+    ? `<div class="wf-meta-field wf-meta-full"><label>Italaw</label><div class="val"><a href="${esc(c.italaw_link)}" target="_blank">${esc(c.italaw_link)}</a></div></div>`
+    : "";
+  document.getElementById("wf-case-info").innerHTML = `
+    <h2>${esc(c.short_name)}</h2>
+    <div class="wf-subtitle">${esc(c.full_name)}</div>
+    <div class="wf-meta">
+      ${wfMetaField("Year", c.year)}
+      ${wfMetaField("Status", c.status)}
+      ${wfMetaField("Applicable IIA", c.applicable_iia, true)}
+      ${wfMetaField("Sector", c.sector)}
+      ${wfMetaField("Amount Claimed", c.amount_claimed_m)}
+      ${wfMetaField("Amount Awarded", c.amount_awarded_m)}
+      ${wfMetaField("Summary", c.summary, true)}
+      ${wfMetaField("Investment Details", c.investment_details, true)}
+      ${italaw}
+    </div>
+  `;
+
+  document.getElementById("wf-enf-status").value  = c.enforcement_status  ?? "";
+  document.getElementById("wf-enf-detail").value  = c.enforcement_detail  ?? "";
+  document.getElementById("wf-context").value     = c.context             ?? "";
+  document.getElementById("wf-claim-basis").value = c.claim_basis         ?? "";
+  document.getElementById("wf-significance").value= c.significance        ?? "";
+  document.getElementById("wf-updated").textContent = c.research_updated_at
+    ? `Saved ${c.research_updated_at.slice(0, 10)}`
+    : "Not yet saved";
+  document.getElementById("wf-save-status").textContent = "";
+  document.getElementById("wf-save-status").style.color = "#10b981";
+  wfDirty = false;
+  document.getElementById("wf-save-btn").classList.remove("dirty");
+}
+
+function wfMarkDirty() {
+  if (!wfDirty) {
+    wfDirty = true;
+    document.getElementById("wf-save-btn").classList.add("dirty");
+  }
+}
+
+async function saveNotes() {
+  const c = wfCases[wfIndex];
+  const body = {
+    case_no:            c.no,
+    enforcement_status: document.getElementById("wf-enf-status").value  || null,
+    enforcement_detail: document.getElementById("wf-enf-detail").value  || null,
+    context:            document.getElementById("wf-context").value     || null,
+    claim_basis:        document.getElementById("wf-claim-basis").value || null,
+    significance:       document.getElementById("wf-significance").value|| null,
+  };
+  const btn = document.getElementById("wf-save-btn");
+  btn.textContent = "Saving…";
+  btn.disabled = true;
+
+  const res = await fetch("/api/notes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  btn.textContent = "Save";
+  btn.disabled = false;
+
+  const statusEl = document.getElementById("wf-save-status");
+  if (data.ok) {
+    Object.assign(wfCases[wfIndex], body, { research_updated_at: data.updated_at });
+    wfDirty = false;
+    btn.classList.remove("dirty");
+    document.getElementById("wf-updated").textContent = `Saved ${data.updated_at.slice(0, 10)}`;
+    statusEl.style.color = "#10b981";
+    statusEl.textContent = "✓ Saved";
+    enforcementIndex[String(c.no)] = body.enforcement_status;
+    setTimeout(() => { statusEl.textContent = ""; }, 2000);
+  } else {
+    statusEl.style.color = "#b91c1c";
+    statusEl.textContent = "Error: " + (data.error ?? "unknown");
+  }
+}
+
+// Wire up dirty detection on all form fields
+["wf-enf-status", "wf-enf-detail", "wf-context", "wf-claim-basis", "wf-significance"].forEach(id => {
+  document.getElementById(id).addEventListener("input",  wfMarkDirty);
+  document.getElementById(id).addEventListener("change", wfMarkDirty);
+});
+
+// Keyboard shortcuts (arrow keys to navigate, Cmd/Ctrl+S to save)
+document.addEventListener("keydown", e => {
+  if (!document.getElementById("workflow-view").classList.contains("visible")) return;
+  const tag = document.activeElement?.tagName;
+  const inField = tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT";
+  if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+    e.preventDefault();
+    saveNotes();
+    return;
+  }
+  if (inField) return;
+  if (e.key === "ArrowLeft")  { e.preventDefault(); wfGo(-1); }
+  if (e.key === "ArrowRight") { e.preventDefault(); wfGo(1); }
+});
 
 // --- SQL ---
 

@@ -118,6 +118,83 @@ def research_index() -> dict:
     return {str(r[0]): r[1] for r in rows}
 
 
+ENF_KEYWORDS = {
+    "paid":         "paid settled payment",
+    "enforced":     "enforced court judgment enforcement",
+    "not_paid":     "not paid award unpaid outstanding",
+    "blocked":      "blocked set aside annulled",
+    "state_won":    "state won dismissed rejected",
+    "discontinued": "discontinued withdrawn settled",
+    "pending":      "pending ongoing proceeding",
+}
+
+
+def workflow_cases() -> list:
+    """Spain cases ordered by USD claim amount desc, with research notes joined."""
+    con = sqlite3.connect(DB)
+    con.row_factory = sqlite3.Row
+    rows = [dict(r) for r in con.execute(
+        """SELECT cases.no, cases.short_name, cases.full_name, cases.year, cases.status,
+                  cases.amount_claimed_m, cases.amount_awarded_m, cases.applicable_iia,
+                  cases.sector, cases.summary, cases.investment_details, cases.italaw_link,
+                  rn.enforcement_status, rn.enforcement_detail,
+                  rn.context, rn.claim_basis, rn.significance,
+                  rn.updated_at AS research_updated_at
+           FROM cases
+           LEFT JOIN research_notes rn ON cases.no = rn.case_no
+           WHERE cases.respondent_state LIKE '%Spain%'
+           ORDER BY CAST(
+             REPLACE(SUBSTR(cases.amount_claimed_m,
+                            INSTR(cases.amount_claimed_m, '(') + 1),
+                     ' USD)', '') AS REAL
+           ) DESC, cases.year ASC"""
+    ).fetchall()]
+    con.close()
+    return rows
+
+
+def save_notes(data: dict) -> dict:
+    """Upsert research_notes for one case and keep FTS in sync."""
+    from datetime import datetime, timezone
+    case_no = data.get("case_no")
+    if not case_no:
+        return {"error": "missing case_no"}
+    enf_status = data.get("enforcement_status") or None
+    enf_detail = data.get("enforcement_detail") or None
+    ctx        = data.get("context") or None
+    claim      = data.get("claim_basis") or None
+    sig        = data.get("significance") or None
+    updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        con = sqlite3.connect(DB)
+        con.execute(
+            """INSERT INTO research_notes
+               (case_no, enforcement_status, enforcement_detail, context, claim_basis, significance, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(case_no) DO UPDATE SET
+                 enforcement_status = excluded.enforcement_status,
+                 enforcement_detail = excluded.enforcement_detail,
+                 context            = excluded.context,
+                 claim_basis        = excluded.claim_basis,
+                 significance       = excluded.significance,
+                 updated_at         = excluded.updated_at""",
+            [case_no, enf_status, enf_detail, ctx, claim, sig, updated_at],
+        )
+        keywords = ENF_KEYWORDS.get(enf_status or "", enf_status or "")
+        con.execute("DELETE FROM research_notes_fts WHERE rowid = ?", [case_no])
+        con.execute(
+            "INSERT INTO research_notes_fts "
+            "(rowid, enforcement_keywords, enforcement_detail, context, claim_basis, significance) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            [case_no, keywords, enf_detail, ctx, claim, sig],
+        )
+        con.commit()
+        con.close()
+        return {"ok": True, "updated_at": updated_at}
+    except sqlite3.Error as e:
+        return {"error": str(e)}
+
+
 def spain_data() -> dict:
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
@@ -204,6 +281,10 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length))
             self._json(run_sql(body.get("sql", "")))
+        elif parsed.path == "/api/notes":
+            length = int(self.headers.get("Content-Length", 0))
+            body = json.loads(self.rfile.read(length))
+            self._json(save_notes(body))
         else:
             self._error(404, "not found")
 
@@ -226,6 +307,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(spain_data())
         elif path == "/api/research":
             self._json(research_index())
+        elif path == "/api/workflow":
+            self._json(workflow_cases())
         elif path == "/api/case":
             case_no = params.get("no")
             if not case_no:
