@@ -197,6 +197,13 @@ Four charts driven by the current Browse filter set (or a named preset):
 
 Running a SQL query whose columns include `status` and `year` automatically updates the visualization data from the SQL result.
 
+### Case Browser tab
+
+Spain's 56 cases displayed one at a time, ordered by USD claim amount descending. Use the Prev / Next buttons or arrow keys to navigate, or jump directly to any case via the dropdown.
+
+- **Left panel** — full UNCTAD case data (read-only).
+- **Right panel** — research notes: enforcement status, enforcement detail, context, claim basis, and significance (read-only).
+
 ---
 
 ## Key Spain ECT Research Findings
@@ -214,13 +221,22 @@ Spain is the world's most-sued state under the Energy Charter Treaty. 50 of its 
 
 **Spain's ECT withdrawal:** Spain withdrew from the ECT effective 28 June 2025. A 20-year sunset clause protects investments existing before that date.
 
+**Further reading:**
+
+- [Spain ECT Case Statistics →](SPAIN_ANALYSIS.md) — 18-question statistical breakdown of the 56 Spain cases (awards, outcomes, investor home states, enforcement distribution).
+- [Spain Case Research Notes →](spain_cases_research.md) — case-by-case narrative notes covering background, legal basis, and enforcement status for all 56 cases.
+
+*Both documents were written by Claude Sonnet 4.6.*
+
 ---
 
 ## Running Locally
 
 ```bash
-# Start the server (default port 8123)
-python3 serve.py
+# Start a local file server (port 8123)
+python3 -m http.server 8123
+# Then open http://localhost:8123/
+# (Must use a server — can't open index.html directly as file:// due to CORS on the DB fetch)
 
 # Regenerate DB from Excel source
 python3 convert.py && python3 migrate.py && python3 seed_research.py && python3 seed_proceedings.py
@@ -228,3 +244,7 @@ python3 convert.py && python3 migrate.py && python3 seed_research.py && python3 
 # Re-run migration + re-seed only (after schema changes)
 python3 migrate.py && python3 seed_research.py && python3 seed_proceedings.py
 ```
+
+---
+
+*This guide was written by Claude Sonnet 4.6.*

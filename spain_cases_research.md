@@ -1126,3 +1126,7 @@ Spain's dispute-settlement exposure falls into two distinct categories:
 8. **Japan/Switzerland investors** (JGC, Eurus Holdings, Itochu, EBL) face NO intra-EU obstacles. JGC enforced in US (2024). These are the "clean" awards.
 9. **Eiser resubmission** produced €262M award (Oct 2025), more than double the annulled original. Spain filing for annulment.
 10. **Spain–ECT withdrawal** effective June 2025 — sunset clause applies to existing investments for 20 years.
+
+---
+
+*This document was written by Claude Sonnet 4.6.*

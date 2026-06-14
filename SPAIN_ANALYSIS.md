@@ -234,3 +234,7 @@ The **10 largest awards** account for **USD 1,138.7M of the USD 1,653.1M total �
 - Eiser's USD 139.8M reflects the original 2017 award (annulled 2020); the Oct 2025 resubmission award (~€262M, ~USD 285M) is not in the UNCTAD dataset and would move Eiser to second place.
 - Novenergia's award (rank 9) was subsequently set aside by Swedish courts (Dec 2022/Jul 2023), reducing Spain's actual enforceable liability by USD 66M.
 - NextEra's USD 323.6M award has been enforced by both the US DC Circuit (Aug 2024) and the Australian Federal Court (Aug 2025, appeal pending) — making it the single most consequential enforcement action against Spain to date.
+
+---
+
+*This document was written by Claude Sonnet 4.6.*

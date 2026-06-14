@@ -439,7 +439,7 @@
 
   #guide-view { display: none; flex: 1; overflow-y: auto; background: #f5f5f5; }
   #guide-view.visible { display: block; }
-  #guide-body {
+  .md-body {
     max-width: 860px;
     margin: 0 auto;
     padding: 32px 28px 48px;
@@ -447,15 +447,15 @@
     min-height: 100%;
     box-shadow: 0 0 0 1px #e5e7eb;
   }
-  #guide-body h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #1a3a5c; }
-  #guide-body h2 { font-size: 16px; font-weight: 700; margin: 28px 0 10px; color: #1a3a5c; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; }
-  #guide-body h3 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; color: #333; }
-  #guide-body p  { margin: 0 0 10px; line-height: 1.65; color: #333; }
-  #guide-body ul, #guide-body ol { margin: 0 0 10px 20px; line-height: 1.7; color: #333; }
-  #guide-body li { margin-bottom: 3px; }
-  #guide-body strong { font-weight: 600; }
-  #guide-body em { font-style: italic; }
-  #guide-body code {
+  .md-body h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #1a3a5c; }
+  .md-body h2 { font-size: 16px; font-weight: 700; margin: 28px 0 10px; color: #1a3a5c; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; }
+  .md-body h3 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; color: #333; }
+  .md-body p  { margin: 0 0 10px; line-height: 1.65; color: #333; }
+  .md-body ul, .md-body ol { margin: 0 0 10px 20px; line-height: 1.7; color: #333; }
+  .md-body li { margin-bottom: 3px; }
+  .md-body strong { font-weight: 600; }
+  .md-body em { font-style: italic; }
+  .md-body code {
     font-family: ui-monospace, "Cascadia Code", monospace;
     font-size: 12px;
     background: #f3f4f6;
@@ -463,7 +463,7 @@
     border-radius: 3px;
     color: #1a3a5c;
   }
-  #guide-body pre {
+  .md-body pre {
     background: #1e293b;
     color: #e2e8f0;
     padding: 14px 16px;
@@ -473,9 +473,9 @@
     font-size: 12.5px;
     line-height: 1.6;
   }
-  #guide-body pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
-  #guide-body table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 13px; }
-  #guide-body th {
+  .md-body pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .md-body table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 13px; }
+  .md-body th {
     background: #f0f4f8;
     text-align: left;
     padding: 6px 10px;
@@ -483,7 +483,7 @@
     font-weight: 600;
     font-size: 12px;
   }
-  #guide-body td {
+  .md-body td {
     padding: 5px 10px;
     border: 1px solid #e5e7eb;
     vertical-align: top;
@@ -492,9 +492,37 @@
     overflow: visible;
     text-overflow: unset;
   }
-  #guide-body hr { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
-  #guide-body a { color: #1a7ac7; text-decoration: none; }
-  #guide-body a:hover { text-decoration: underline; }
+  .md-body hr { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+  .md-body a { color: #1a7ac7; text-decoration: none; }
+  .md-body a:hover { text-decoration: underline; }
+
+  /* Doc viewer modal */
+  #doc-modal {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; justify-content: center;
+  }
+  #doc-modal-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,.45);
+  }
+  #doc-modal-panel {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 920px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #doc-modal-header {
+    padding: 10px 16px; background: #1a3a5c;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #doc-modal-title { color: #fff; font-size: 13px; font-weight: 600; opacity: .85; }
+  #doc-modal-close {
+    background: none; border: 1px solid rgba(255,255,255,.4);
+    color: #fff; padding: 5px 14px; border-radius: 4px;
+    cursor: pointer; font-size: 13px; font-family: inherit;
+  }
+  #doc-modal-close:hover { background: rgba(255,255,255,.15); }
+  #doc-modal-scroll { flex: 1; overflow-y: auto; background: #f5f5f5; }
 
   /* Workflow / Case Browser */
   #workflow-view {
@@ -644,7 +672,7 @@
     #detail-panel { width: 100vw; padding: 16px; }
     .detail-grid { grid-template-columns: 1fr; }
     .spain-grid { grid-template-columns: 1fr; }
-    #guide-body { padding: 20px 14px 40px; }
+    .md-body { padding: 20px 14px 40px; }
     #sql-editor-wrap { padding: 10px 12px 0; }
 
     #wf-body { flex-direction: column; overflow-y: auto; }
@@ -729,7 +757,20 @@
   </div>
 
   <div id="guide-view">
-    <div id="guide-body">Loading…</div>
+    <div id="guide-body" class="md-body">Loading…</div>
+  </div>
+
+  <div id="doc-modal" style="display:none">
+    <div id="doc-modal-overlay" onclick="closeDocModal()"></div>
+    <div id="doc-modal-panel">
+      <div id="doc-modal-header">
+        <span id="doc-modal-title"></span>
+        <button id="doc-modal-close" onclick="closeDocModal()">✕ Close</button>
+      </div>
+      <div id="doc-modal-scroll">
+        <div id="doc-modal-content" class="md-body">Loading…</div>
+      </div>
+    </div>
   </div>
 
   <div id="workflow-view">
@@ -1147,9 +1188,48 @@ let guideLoaded = false;
 async function loadGuide() {
   if (guideLoaded) return;
   const md = await fetch("GUIDE.md").then(r => r.text());
-  document.getElementById("guide-body").innerHTML = marked.parse(md);
+  const body = document.getElementById("guide-body");
+  body.innerHTML = marked.parse(md);
+  interceptMdLinks(body);
   guideLoaded = true;
 }
+
+function interceptMdLinks(container) {
+  container.addEventListener("click", e => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    const href = a.getAttribute("href");
+    if (href && /\.md$/i.test(href) && !/^https?:\/\//.test(href)) {
+      e.preventDefault();
+      openDocModal(href);
+    }
+  });
+}
+
+async function openDocModal(url) {
+  const modal = document.getElementById("doc-modal");
+  const content = document.getElementById("doc-modal-content");
+  const title = document.getElementById("doc-modal-title");
+  content.innerHTML = "Loading…";
+  title.textContent = url;
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
+  document.getElementById("doc-modal-scroll").scrollTop = 0;
+  const md = await fetch(url).then(r => r.text());
+  content.innerHTML = marked.parse(md);
+  interceptMdLinks(content);
+}
+
+function closeDocModal() {
+  document.getElementById("doc-modal").style.display = "none";
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.getElementById("doc-modal").style.display !== "none") {
+    closeDocModal();
+  }
+});
 
 // --- Visualizations ---
 
