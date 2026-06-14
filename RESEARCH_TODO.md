@@ -5,40 +5,22 @@
 - [x] `research_notes` table with enforcement status for all 56 Spain cases (paid/enforced/not_paid/blocked/state_won/discontinued/pending)
 - [x] `enforcement_proceedings` table — structured per-forum rows (forum, result, date, notes)
 - [x] Full-text search across research notes fields (enforcement_detail, context, claim_basis, significance)
-- [x] Enforcement badge column in Browse table
-- [x] Case detail panel shows research notes fields
-- [x] Visualizations tab tracks current Browse result set; preset buttons (Current Browse, Spain, All Cases)
-- [x] SQL tab pre-populates with current Browse query
-- [x] Guide tab with rendered GUIDE.md
+- [x] Enforcement badge column in Browse table; Enforcement facet in sidebar
+- [x] Case detail panel shows research notes + enforcement proceedings timeline
+- [x] Visualizations tab — 4 Chart.js charts; tracks current Browse result set; preset buttons
+- [x] Scatter chart dots colored by enforcement_status (one dataset per status)
+- [x] SQL tab — read-only queries, pre-populates with current Browse query (Cmd+Enter)
+- [x] Guide tab — renders GUIDE.md via marked.js
 - [x] SPAIN_ANALYSIS.md — 18-question statistical breakdown
-- [x] Scatter chart dots colored by enforcement_status (grouped datasets, one per status)
-
----
-
-## Next: Mobile-Friendly View (iPhone mini target)
-
-iPhone SE / mini viewport: 375×667px. Current layout is desktop-only (sidebar + table, fixed header, multi-column grids).
-
-### Changes needed
-
-1. **Responsive layout** — sidebar collapses to a drawer (toggle button in header); table scrolls horizontally or switches to card list below ~600px
-2. **Header** — stack title + search vertically on small screens; tab bar wraps or scrolls horizontally
-3. **Browse tab** — card-per-row list instead of wide table on mobile; show short_name, year, status, enforcement badge
-4. **Detail panel** — full-screen overlay on mobile (currently a right-side split panel)
-5. **Visualizations tab** — charts resize to single-column stack; touch-friendly tap targets on chart elements
-6. **SQL tab** — textarea stays full width; result table scrolls horizontally
-7. **Facet sidebar** — off-canvas drawer triggered by a "Filters" button; overlay closes on tap-outside
-
-### Implementation notes
-
-- Add `@media (max-width: 600px)` breakpoints to the `<style>` block in `index.html`
-- No JS framework needed — CSS flex/grid restructuring only, plus a small JS toggle for the filter drawer
-- Test at 375px width (iPhone mini/SE) and 390px (iPhone 14)
+- [x] Mobile-friendly view — off-canvas filter drawer, card list, responsive charts
+- [x] Case Browser tab — Spain cases one at a time (by claim amount desc), read-only notes panel, arrow-key navigation
+- [x] Rearchitected as pure static site using sql.js (SQLite WASM) — no server, no Railway
+- [x] Deployed to GitHub Pages (eudinaesis.github.io/isds-dataset)
 
 ---
 
 ## Backlog
 
-- Per-case `sources` URLs field (currently not tracked in research_notes)
-- Research workflow view: Spain cases one at a time for annotation/review
-- `key_facts` field per case (planned in original schema but not yet added)
+- Per-case `sources` URLs field (add column to research_notes, display in detail panel + case browser)
+- `key_facts` field per case (freeform paragraph; schema migration + re-seed)
+- Scatter/bar chart highlight for non-EU vs EU investors (Achmea exposure dimension)
