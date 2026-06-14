@@ -646,6 +646,16 @@
     color: #888;
     margin-bottom: 4px;
   }
+  .wf-field input[type="password"] {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    color: #1a1a1a;
+  }
+  .wf-field input[type="password"]:focus { outline: none; border-color: #4a9eda; }
   .wf-field select, .wf-field textarea {
     width: 100%;
     padding: 7px 10px;
@@ -938,6 +948,10 @@
         <div class="wf-field">
           <label>Significance</label>
           <textarea id="wf-significance" rows="3" placeholder="Why this case matters…"></textarea>
+        </div>
+        <div class="wf-field">
+          <label>Write Token</label>
+          <input type="password" id="wf-token" placeholder="Required in production" autocomplete="off">
         </div>
         <div class="wf-save-row">
           <button id="wf-save-btn" onclick="saveNotes()">Save</button>
@@ -1637,6 +1651,9 @@ let wfIndex = 0;
 let wfDirty = false;
 
 async function loadWorkflow() {
+  // Restore token from session so user doesn't have to re-enter after tab switching
+  const saved = sessionStorage.getItem("wf_token");
+  if (saved) document.getElementById("wf-token").value = saved;
   if (wfCases.length) { renderWfCase(); return; }
   document.getElementById("wf-case-info").textContent = "Loading…";
   const res = await fetch("/api/workflow");
@@ -1733,9 +1750,13 @@ async function saveNotes() {
   btn.textContent = "Saving…";
   btn.disabled = true;
 
+  const token = document.getElementById("wf-token").value.trim();
+  sessionStorage.setItem("wf_token", token);
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch("/api/notes", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
   const data = await res.json();
@@ -1743,6 +1764,11 @@ async function saveNotes() {
   btn.disabled = false;
 
   const statusEl = document.getElementById("wf-save-status");
+  if (res.status === 401) {
+    statusEl.style.color = "#b91c1c";
+    statusEl.textContent = "Wrong token";
+    return;
+  }
   if (data.ok) {
     Object.assign(wfCases[wfIndex], body, { research_updated_at: data.updated_at });
     wfDirty = false;

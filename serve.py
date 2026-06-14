@@ -14,6 +14,7 @@ HTML = Path(__file__).parent / "index.html"
 GUIDE = Path(__file__).parent / "GUIDE.md"
 SPAIN_ANALYSIS = Path(__file__).parent / "SPAIN_ANALYSIS.md"
 PORT = int(os.environ.get("PORT", 8123))
+WRITE_TOKEN = os.environ.get("WRITE_TOKEN", "")  # empty = dev mode (no auth required)
 
 SEARCHABLE_COLS = [
     "short_name", "full_name", "applicable_iia",
@@ -282,6 +283,9 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length))
             self._json(run_sql(body.get("sql", "")))
         elif parsed.path == "/api/notes":
+            if WRITE_TOKEN and self.headers.get("Authorization") != f"Bearer {WRITE_TOKEN}":
+                self._error(401, "unauthorized")
+                return
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length))
             self._json(save_notes(body))
