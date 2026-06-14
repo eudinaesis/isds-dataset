@@ -1,5 +1,0 @@
-FROM python:3.12-slim
-WORKDIR /app
-COPY . .
-EXPOSE 8123
-CMD ["python3", "serve.py"]

@@ -54,7 +54,6 @@
   }
   #search-bar button:hover { background: #357ab8; }
 
-  /* Tab nav in header */
   #tab-nav {
     display: flex;
     align-items: stretch;
@@ -82,7 +81,6 @@
     overflow: hidden;
   }
 
-  /* SQL panel */
   #sql-view {
     display: none;
     flex-direction: column;
@@ -112,11 +110,7 @@
     line-height: 1.5;
   }
   #sql-input:focus { outline: none; border-color: #4a9eda; }
-  #sql-run-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  #sql-run-row { display: flex; align-items: center; gap: 10px; }
   #sql-run-btn {
     padding: 6px 18px;
     background: #1a3a5c;
@@ -130,11 +124,7 @@
   #sql-run-btn:hover { background: #2a5a8c; }
   #sql-status { font-size: 12px; color: #666; }
   #sql-error { font-size: 13px; color: #b91c1c; padding: 8px 16px; }
-  #sql-result-wrap {
-    flex: 1;
-    overflow: auto;
-    padding: 12px 16px;
-  }
+  #sql-result-wrap { flex: 1; overflow: auto; padding: 12px 16px; }
   #sql-result-wrap table {
     width: 100%;
     border-collapse: collapse;
@@ -167,7 +157,6 @@
     white-space: nowrap;
   }
 
-  /* Sidebar */
   #sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -200,13 +189,7 @@
   .facet-item .val { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
   .facet-item .cnt { font-size: 11px; color: #999; flex-shrink: 0; }
 
-  /* Main */
-  #main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
   #results-header {
     padding: 8px 14px;
@@ -229,16 +212,9 @@
   #pagination button:disabled { opacity: .4; cursor: default; }
   #pagination button:hover:not(:disabled) { background: #f0f4f8; }
 
-  #table-wrap {
-    flex: 1;
-    overflow: auto;
-  }
+  #table-wrap { flex: 1; overflow: auto; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-  }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
   thead th {
     position: sticky;
     top: 0;
@@ -277,7 +253,6 @@
   .status-withdrawn { background: #f3f4f6; color: #6b7280; }
   .status-other     { background: #ede9fe; color: #5b21b6; }
 
-  /* Detail panel */
   #detail-overlay {
     display: none;
     position: fixed;
@@ -330,7 +305,6 @@
 
   #empty { padding: 40px; text-align: center; color: #999; }
 
-  /* Enforcement status badges */
   .enf-badge {
     display: inline-block;
     padding: 1px 7px;
@@ -347,7 +321,6 @@
   .enf-discontinued { background: #f3f4f6; color: #9ca3af; }
   .enf-pending      { background: #ede9fe; color: #5b21b6; }
 
-  /* Research notes in detail panel */
   .research-section {
     margin-top: 20px;
     padding-top: 16px;
@@ -369,13 +342,8 @@
     color: #888;
     margin-bottom: 3px;
   }
-  .research-field .val {
-    font-size: 13px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
+  .research-field .val { font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 
-  /* Enforcement proceedings timeline */
   .proceedings-table {
     width: 100%;
     border-collapse: collapse;
@@ -410,15 +378,14 @@
     font-weight: 600;
     white-space: nowrap;
   }
-  .proc-enforced      { background: #d1fae5; color: #065f46; }
-  .proc-dismissed     { background: #f3f4f6; color: #6b7280; }
-  .proc-pending       { background: #ede9fe; color: #5b21b6; }
-  .proc-set_aside     { background: #fee2e2; color: #991b1b; }
-  .proc-annulled      { background: #fee2e2; color: #991b1b; }
-  .proc-blocked       { background: #fee2e2; color: #991b1b; }
+  .proc-enforced       { background: #d1fae5; color: #065f46; }
+  .proc-dismissed      { background: #f3f4f6; color: #6b7280; }
+  .proc-pending        { background: #ede9fe; color: #5b21b6; }
+  .proc-set_aside      { background: #fee2e2; color: #991b1b; }
+  .proc-annulled       { background: #fee2e2; color: #991b1b; }
+  .proc-blocked        { background: #fee2e2; color: #991b1b; }
   .proc-appeal_pending { background: #fef3c7; color: #92400e; }
 
-  /* Visualizations dashboard */
   #viz-view {
     display: none;
     flex: 1;
@@ -434,12 +401,7 @@
     margin-bottom: 16px;
     flex-wrap: wrap;
   }
-  #viz-source-label {
-    font-size: 13px;
-    color: #555;
-    flex: 1;
-    min-width: 160px;
-  }
+  #viz-source-label { font-size: 13px; color: #555; flex: 1; min-width: 160px; }
   #viz-presets { display: flex; gap: 6px; }
   .viz-preset-btn {
     padding: 4px 12px;
@@ -475,13 +437,7 @@
   .chart-wrap { position: relative; height: 280px; }
   .chart-wrap-tall { position: relative; height: 340px; }
 
-  /* Guide tab */
-  #guide-view {
-    display: none;
-    flex: 1;
-    overflow-y: auto;
-    background: #f5f5f5;
-  }
+  #guide-view { display: none; flex: 1; overflow-y: auto; background: #f5f5f5; }
   #guide-view.visible { display: block; }
   #guide-body {
     max-width: 860px;
@@ -518,12 +474,7 @@
     line-height: 1.6;
   }
   #guide-body pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
-  #guide-body table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0 16px;
-    font-size: 13px;
-  }
+  #guide-body table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 13px; }
   #guide-body th {
     background: #f0f4f8;
     text-align: left;
@@ -545,7 +496,7 @@
   #guide-body a { color: #1a7ac7; text-decoration: none; }
   #guide-body a:hover { text-decoration: underline; }
 
-  /* Workflow view */
+  /* Workflow / Case Browser */
   #workflow-view {
     display: none;
     flex: 1;
@@ -554,7 +505,6 @@
     background: #f5f5f5;
   }
   #workflow-view.visible { display: flex; }
-
   #wf-nav {
     display: flex;
     align-items: center;
@@ -589,13 +539,7 @@
     font-size: 13px;
   }
   #wf-case-select option { background: #1a3a5c; }
-
-  #wf-body {
-    flex: 1;
-    display: flex;
-    min-height: 0;
-  }
-
+  #wf-body { flex: 1; display: flex; min-height: 0; }
   #wf-case-panel {
     flex: 1;
     overflow-y: auto;
@@ -605,11 +549,7 @@
   }
   #wf-case-panel h2 { font-size: 18px; margin-bottom: 4px; }
   #wf-case-panel .wf-subtitle { font-size: 13px; color: #555; margin-bottom: 14px; }
-  .wf-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 20px;
-  }
+  .wf-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
   .wf-meta-field label {
     display: block;
     font-size: 11px;
@@ -622,7 +562,6 @@
   .wf-meta-full { grid-column: 1 / -1; }
   .wf-meta-field a { color: #1a7ac7; text-decoration: none; }
   .wf-meta-field a:hover { text-decoration: underline; }
-
   #wf-notes-panel {
     width: 360px;
     flex-shrink: 0;
@@ -630,16 +569,9 @@
     padding: 16px 18px;
     background: #fafafa;
   }
-  #wf-notes-panel h3 {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #666;
-    margin-bottom: 14px;
-  }
   .wf-timestamp { font-size: 11px; color: #999; }
 
-  /* Hidden by default; toggled on mobile */
+  /* Mobile helpers */
   #sidebar-overlay { display: none; }
   #cards-list { display: none; }
   #filters-btn {
@@ -659,20 +591,9 @@
 
   /* === Mobile (≤600px) === */
   @media (max-width: 600px) {
-    header {
-      flex-wrap: wrap;
-      padding: 8px 12px;
-      gap: 6px;
-      align-items: center;
-    }
+    header { flex-wrap: wrap; padding: 8px 12px; gap: 6px; align-items: center; }
     header h1 { font-size: 15px; align-self: center; }
-
-    #search-bar {
-      order: 3;
-      flex: 0 0 100%;
-      padding-bottom: 4px;
-    }
-
+    #search-bar { order: 3; flex: 0 0 100%; padding-bottom: 4px; }
     #tab-nav {
       flex: 1;
       overflow-x: auto;
@@ -684,12 +605,9 @@
     #tab-nav::-webkit-scrollbar { display: none; }
     .tab-btn { padding: 0 10px; font-size: 12px; white-space: nowrap; }
 
-    /* Sidebar → fixed off-canvas drawer */
     #sidebar {
       position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
+      top: 0; left: 0; bottom: 0;
       width: 280px;
       z-index: 200;
       transform: translateX(-100%);
@@ -697,8 +615,6 @@
       box-shadow: 4px 0 24px rgba(0,0,0,.25);
     }
     #sidebar.drawer-open { transform: translateX(0); }
-
-    /* Overlay behind drawer */
     #sidebar-overlay {
       display: none;
       position: fixed;
@@ -707,14 +623,10 @@
       z-index: 199;
     }
     #sidebar-overlay.visible { display: block; }
-
-    /* Filters button */
     #filters-btn { display: inline-flex; }
 
-    /* Card list instead of table */
     #results-table { display: none; }
     #cards-list { display: block; }
-
     .case-card {
       border-bottom: 1px solid #eee;
       padding: 12px 14px;
@@ -725,45 +637,32 @@
       gap: 5px;
     }
     .case-card:active { background: #f0f7ff; }
-    .case-card .card-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #1a1a1a;
-      line-height: 1.3;
-    }
+    .case-card .card-name { font-size: 14px; font-weight: 600; color: #1a1a1a; line-height: 1.3; }
     .case-card .card-sub { font-size: 12px; color: #666; }
-    .case-card .card-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      margin-top: 2px;
-    }
+    .case-card .card-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
 
-    /* Detail panel: full screen */
     #detail-panel { width: 100vw; padding: 16px; }
     .detail-grid { grid-template-columns: 1fr; }
-
-    /* Charts: single column */
     .spain-grid { grid-template-columns: 1fr; }
-
-    /* Guide: tighter padding */
     #guide-body { padding: 20px 14px 40px; }
-
-    /* SQL: tighter */
     #sql-editor-wrap { padding: 10px 12px 0; }
 
-    /* Workflow: stack vertically on mobile */
     #wf-body { flex-direction: column; overflow-y: auto; }
     #wf-case-panel { border-right: none; border-bottom: 1px solid #e0e0e0; overflow-y: visible; }
     #wf-notes-panel { width: 100%; overflow-y: visible; }
     #wf-case-select { max-width: 160px; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
 <body>
+
+<div id="loading-overlay" style="position:fixed;inset:0;background:#1a3a5c;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;">
+  <div style="font-size:20px;font-weight:700;color:#fff;">ISDS Navigator</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.7);">Loading database…</div>
+</div>
 
 <header>
   <h1>ISDS Navigator</h1>
@@ -800,15 +699,9 @@
       <table id="results-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Year</th>
-            <th>Short Name</th>
-            <th>Respondent</th>
-            <th>Home State</th>
-            <th>Applicable IIA</th>
-            <th>Status</th>
-            <th>Enforcement</th>
-            <th>Sector</th>
+            <th>#</th><th>Year</th><th>Short Name</th><th>Respondent</th>
+            <th>Home State</th><th>Applicable IIA</th><th>Status</th>
+            <th>Enforcement</th><th>Sector</th>
           </tr>
         </thead>
         <tbody id="results-body"></tbody>
@@ -828,22 +721,10 @@
       </div>
     </div>
     <div class="spain-grid">
-      <div class="spain-card">
-        <h3>Case Outcomes</h3>
-        <div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div>
-      </div>
-      <div class="spain-card">
-        <h3>Investors' Countries of Origin</h3>
-        <div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div>
-      </div>
-      <div class="spain-card">
-        <h3>Cases Filed per Year</h3>
-        <div class="chart-wrap"><canvas id="chart-byyear"></canvas></div>
-      </div>
-      <div class="spain-card">
-        <h3>Compensation Claimed vs. Awarded (USD millions)</h3>
-        <div class="chart-wrap"><canvas id="chart-amounts"></canvas></div>
-      </div>
+      <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
+      <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
+      <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
+      <div class="spain-card"><h3>Compensation Claimed vs. Awarded (USD millions)</h3><div class="chart-wrap"><canvas id="chart-amounts"></canvas></div></div>
     </div>
   </div>
 
@@ -859,12 +740,8 @@
       <button id="wf-next" onclick="wfGo(1)">Next →</button>
     </div>
     <div id="wf-body">
-      <div id="wf-case-panel">
-        <div id="wf-case-info">Loading…</div>
-      </div>
-      <div id="wf-notes-panel">
-        <div id="wf-notes-content"></div>
-      </div>
+      <div id="wf-case-panel"><div id="wf-case-info">Loading…</div></div>
+      <div id="wf-notes-panel"><div id="wf-notes-content"></div></div>
     </div>
   </div>
 
@@ -891,22 +768,64 @@
 </div>
 
 <script>
+// Global DB instance (set on load)
+let db = null;
+
 const state = { q: "", filters: {}, page: 1 };
 
+// --- DB helpers ---
+
+function dbAll(sql, params = []) {
+  const stmt = db.prepare(sql);
+  if (params.length) stmt.bind(params);
+  const cols = stmt.getColumnNames();
+  const rows = [];
+  while (stmt.step()) {
+    const vals = stmt.get();
+    const obj = {};
+    cols.forEach((c, i) => obj[c] = vals[i]);
+    rows.push(obj);
+  }
+  stmt.free();
+  return rows;
+}
+
+function buildSearchSQL(q, filters) {
+  const clauses = [];
+  const args = [];
+  if (q) {
+    const fq = q.replace(/['"()*]/g, ' ').trim();
+    if (fq) {
+      clauses.push(
+        "(cases.no IN (SELECT rowid FROM cases_fts WHERE cases_fts MATCH ?) " +
+        "OR cases.no IN (SELECT rowid FROM research_notes_fts WHERE research_notes_fts MATCH ?))"
+      );
+      args.push(fq, fq);
+    }
+  }
+  for (const [k, v] of Object.entries(filters)) {
+    if (!v) continue;
+    if (k === "enforcement_status") {
+      clauses.push("rn.enforcement_status = ?");
+    } else {
+      clauses.push(`cases.${k} = ?`);
+    }
+    args.push(v);
+  }
+  return { where: clauses.length ? "WHERE " + clauses.join(" AND ") : "", args };
+}
+
+// --- Badges & helpers ---
+
 const ENF_LABELS = {
-  paid:         "Paid",
-  enforced:     "Enforced (unpaid)",
-  not_paid:     "Award unpaid",
-  blocked:      "Blocked / set aside",
-  state_won:    "State prevailed",
-  discontinued: "Discontinued",
-  pending:      "Pending",
+  paid: "Paid", enforced: "Enforced (unpaid)", not_paid: "Award unpaid",
+  blocked: "Blocked / set aside", state_won: "State prevailed",
+  discontinued: "Discontinued", pending: "Pending",
 };
 
 function enfBadge(status) {
   if (!status) return "";
-  const label = ENF_LABELS[status] ?? status;
-  return `<span class="enf-badge enf-${status}">${esc(label)}</span>`;
+  return `<span class="enf-badge enf-${status}">${esc(ENF_LABELS[status] ?? status)}</span>`;
 }
 
 function statusClass(s) {
@@ -925,23 +844,31 @@ function esc(s) {
   return d.innerHTML;
 }
 
-async function search(page = 1) {
+// --- Browse ---
+
+function search(page = 1) {
+  if (!db) return;
   state.q = document.getElementById("q").value.trim();
   state.page = page;
-  const params = new URLSearchParams({ q: state.q, page });
-  for (const [k, v] of Object.entries(state.filters)) if (v) params.set(k, v);
 
-  const res = await fetch("/api/search?" + params);
-  const data = await res.json();
-  renderResults(data);
+  const { where, args } = buildSearchSQL(state.q, state.filters);
+  const BASE   = "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no";
+  const SELECT = "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis";
+  const PER    = 50;
+  const offset = (page - 1) * PER;
+
+  const total = dbAll(`SELECT COUNT(*) AS n ${BASE} ${where}`, args)[0]?.n ?? 0;
+  const rows  = dbAll(`${SELECT} ${BASE} ${where} ORDER BY cases.year DESC, cases.no ASC LIMIT ? OFFSET ?`,
+                       [...args, PER, offset]);
+
+  renderResults({ total, page, per_page: PER, rows });
   updateVizFromBrowse();
 }
 
 function renderResults({ total, page, per_page, rows }) {
   const pages = Math.ceil(total / per_page);
-  document.getElementById("total-label").textContent =
-    `${total.toLocaleString()} cases`;
-  document.getElementById("page-label").textContent = `${page} / ${pages || 1}`;
+  document.getElementById("total-label").textContent = `${total.toLocaleString()} cases`;
+  document.getElementById("page-label").textContent  = `${page} / ${pages || 1}`;
   document.getElementById("prev-btn").disabled = page <= 1;
   document.getElementById("next-btn").disabled = page >= pages;
 
@@ -987,60 +914,54 @@ function renderCards(rows) {
   `).join("");
 }
 
-function goPage(delta) {
-  search(state.page + delta);
-}
+function goPage(delta) { search(state.page + delta); }
 
 // --- Facets ---
 
-async function loadFacets() {
-  const res = await fetch("/api/facets");
-  const data = await res.json();
+const FACET_LABELS = {
+  year: "Year", status: "Status", respondent_state: "Respondent State",
+  home_state: "Home State", sector: "Sector",
+  arbitral_rules: "Arbitral Rules", institution: "Institution",
+};
+
+let enforcementIndex = {};
+
+function loadFacets() {
+  const COLS = ["year","respondent_state","home_state","sector","status","arbitral_rules","institution"];
+  const data = {};
+  for (const col of COLS) {
+    data[col] = dbAll(
+      `SELECT ${col} AS value, COUNT(*) AS count FROM cases WHERE ${col} IS NOT NULL AND ${col} != '' GROUP BY ${col} ORDER BY count DESC LIMIT 100`
+    );
+  }
   renderFacets(data);
 }
 
-const FACET_LABELS = {
-  year: "Year",
-  status: "Status",
-  respondent_state: "Respondent State",
-  home_state: "Home State",
-  sector: "Sector",
-  arbitral_rules: "Arbitral Rules",
-  institution: "Institution",
-};
-
-// Enforcement facet is fetched separately and rendered after UNCTAD facets
-let enforcementIndex = {};   // case_no (string) → enforcement_status
-
-async function loadEnforcementIndex() {
-  const res = await fetch("/api/research");
-  enforcementIndex = await res.json();
+function loadEnforcementIndex() {
+  enforcementIndex = {};
+  for (const r of dbAll("SELECT case_no, enforcement_status FROM research_notes"))
+    enforcementIndex[String(r.case_no)] = r.enforcement_status;
   renderEnforcementFacet();
 }
 
 function renderEnforcementFacet() {
   const counts = {};
-  for (const status of Object.values(enforcementIndex)) {
-    counts[status] = (counts[status] ?? 0) + 1;
-  }
+  for (const s of Object.values(enforcementIndex)) counts[s] = (counts[s] ?? 0) + 1;
+
   const container = document.getElementById("facets-container");
   const group = document.createElement("div");
   group.id = "enf-facet-group";
   group.className = "facet-group";
-  group.innerHTML = `<h3>Enforcement</h3>`;
+  group.innerHTML = "<h3>Enforcement</h3>";
 
-  const ORDER = ["enforced","not_paid","blocked","paid","state_won","discontinued","pending"];
-  ORDER.forEach(status => {
+  ["enforced","not_paid","blocked","paid","state_won","discontinued","pending"].forEach(status => {
     if (!counts[status]) return;
     const el = document.createElement("div");
     el.className = "facet-item" + (state.filters["enforcement_status"] === status ? " active" : "");
     el.innerHTML = `<span class="val">${enfBadge(status)}</span><span class="cnt">${counts[status]}</span>`;
     el.onclick = () => {
-      if (state.filters["enforcement_status"] === status) {
-        delete state.filters["enforcement_status"];
-      } else {
-        state.filters["enforcement_status"] = status;
-      }
+      if (state.filters["enforcement_status"] === status) delete state.filters["enforcement_status"];
+      else state.filters["enforcement_status"] = status;
       group.querySelectorAll(".facet-item").forEach(e => e.classList.remove("active"));
       if (state.filters["enforcement_status"]) el.classList.add("active");
       search(1);
@@ -1048,7 +969,6 @@ function renderEnforcementFacet() {
     group.appendChild(el);
   });
 
-  // Insert before the first existing facet group
   const first = container.firstChild;
   if (first) container.insertBefore(group, first);
   else container.appendChild(group);
@@ -1057,32 +977,25 @@ function renderEnforcementFacet() {
 function renderFacets(data) {
   const container = document.getElementById("facets-container");
   container.innerHTML = "";
-
   for (const [col, items] of Object.entries(data)) {
     if (!items.length) continue;
     const group = document.createElement("div");
     group.className = "facet-group";
     group.innerHTML = `<h3>${FACET_LABELS[col] ?? col}</h3>`;
-
     items.slice(0, 20).forEach(({ value, count }) => {
       const el = document.createElement("div");
       el.className = "facet-item" + (state.filters[col] === value ? " active" : "");
       el.title = value;
       el.innerHTML = `<span class="val">${esc(value)}</span><span class="cnt">${count}</span>`;
       el.onclick = () => {
-        if (state.filters[col] === value) {
-          delete state.filters[col];
-        } else {
-          state.filters[col] = value;
-        }
-        // Re-render active state
+        if (state.filters[col] === value) delete state.filters[col];
+        else state.filters[col] = value;
         group.querySelectorAll(".facet-item").forEach(e => e.classList.remove("active"));
         if (state.filters[col]) el.classList.add("active");
         search(1);
       };
       group.appendChild(el);
     });
-
     container.appendChild(group);
   }
 }
@@ -1091,50 +1004,51 @@ function renderFacets(data) {
 
 function field(label, value, full = false) {
   if (!value) return "";
-  return `
-    <div class="detail-field${full ? " detail-full" : ""}">
-      <label>${label}</label>
-      <div class="val">${esc(value)}</div>
-    </div>`;
+  return `<div class="detail-field${full ? " detail-full" : ""}"><label>${label}</label><div class="val">${esc(value)}</div></div>`;
 }
 
 function linkField(label, value) {
   if (!value) return "";
   const links = value.split(/[\n;]+/).map(u => u.trim()).filter(Boolean);
-  return `
-    <div class="detail-field detail-full">
-      <label>${label}</label>
-      <div class="val">${links.map(u => `<a href="${esc(u)}" target="_blank">${esc(u)}</a>`).join("<br>")}</div>
-    </div>`;
+  return `<div class="detail-field detail-full"><label>${label}</label><div class="val">${
+    links.map(u => `<a href="${esc(u)}" target="_blank">${esc(u)}</a>`).join("<br>")
+  }</div></div>`;
 }
 
-async function showDetail(no) {
-  const res = await fetch(`/api/case?no=${no}`);
-  const r = await res.json();
+function showDetail(no) {
+  const rows = dbAll(
+    `SELECT cases.*,
+            rn.enforcement_status, rn.enforcement_detail,
+            rn.amount_paid_usd_m, rn.context, rn.claim_basis, rn.significance,
+            rn.updated_at AS research_updated_at
+     FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no
+     WHERE cases.no = ?`,
+    [no]
+  );
+  if (!rows.length) return;
+  const r = rows[0];
+  r.proceedings = dbAll(
+    "SELECT forum, result, date_text, notes FROM enforcement_proceedings WHERE case_no = ? ORDER BY id",
+    [no]
+  );
 
   const PROC_LABELS = {
-    enforced:       "Enforced",
-    dismissed:      "Dismissed",
-    pending:        "Pending",
-    set_aside:      "Set aside",
-    annulled:       "Annulled",
-    blocked:        "Blocked",
-    appeal_pending: "Appeal pending",
+    enforced: "Enforced", dismissed: "Dismissed", pending: "Pending",
+    set_aside: "Set aside", annulled: "Annulled", blocked: "Blocked", appeal_pending: "Appeal pending",
   };
 
-  const procHtml = r.proceedings && r.proceedings.length ? `
+  const procHtml = r.proceedings.length ? `
     <div class="research-section">
       <h3>Enforcement Proceedings</h3>
       <table class="proceedings-table">
         <thead><tr><th>Forum</th><th>Result</th><th>Date</th><th>Notes</th></tr></thead>
-        <tbody>
-          ${r.proceedings.map(p => `
-            <tr>
-              <td>${esc(p.forum)}</td>
-              <td><span class="proc-result proc-${p.result}">${esc(PROC_LABELS[p.result] ?? p.result)}</span></td>
-              <td style="white-space:nowrap;color:#666">${esc(p.date_text ?? "")}</td>
-              <td style="color:#444">${esc(p.notes ?? "")}</td>
-            </tr>`).join("")}
+        <tbody>${r.proceedings.map(p => `
+          <tr>
+            <td>${esc(p.forum)}</td>
+            <td><span class="proc-result proc-${p.result}">${esc(PROC_LABELS[p.result] ?? p.result)}</span></td>
+            <td style="white-space:nowrap;color:#666">${esc(p.date_text ?? "")}</td>
+            <td style="color:#444">${esc(p.notes ?? "")}</td>
+          </tr>`).join("")}
         </tbody>
       </table>
     </div>` : "";
@@ -1142,20 +1056,16 @@ async function showDetail(no) {
   const researchHtml = r.enforcement_status ? `
     <div class="research-section">
       <h3>Research Notes</h3>
-      <div class="research-field">
-        <label>Enforcement Status</label>
-        <div class="val">${enfBadge(r.enforcement_status)}</div>
-      </div>
+      <div class="research-field"><label>Enforcement Status</label><div class="val">${enfBadge(r.enforcement_status)}</div></div>
       ${r.enforcement_detail ? `<div class="research-field"><label>Enforcement Detail</label><div class="val">${esc(r.enforcement_detail)}</div></div>` : ""}
-      ${r.context          ? `<div class="research-field"><label>Context</label><div class="val">${esc(r.context)}</div></div>` : ""}
-      ${r.claim_basis      ? `<div class="research-field"><label>Claim Basis</label><div class="val">${esc(r.claim_basis)}</div></div>` : ""}
-      ${r.significance     ? `<div class="research-field"><label>Significance</label><div class="val">${esc(r.significance)}</div></div>` : ""}
+      ${r.context   ? `<div class="research-field"><label>Context</label><div class="val">${esc(r.context)}</div></div>` : ""}
+      ${r.claim_basis ? `<div class="research-field"><label>Claim Basis</label><div class="val">${esc(r.claim_basis)}</div></div>` : ""}
+      ${r.significance ? `<div class="research-field"><label>Significance</label><div class="val">${esc(r.significance)}</div></div>` : ""}
     </div>` : "";
 
   document.getElementById("detail-content").innerHTML = `
     <h2>${esc(r.short_name)}</h2>
     <div class="subtitle">${esc(r.full_name)}</div>
-
     <div class="detail-grid">
       ${field("Case No.", r.no)}
       ${field("Year", r.year)}
@@ -1186,7 +1096,6 @@ async function showDetail(no) {
     ${procHtml}
     ${researchHtml}
   `;
-
   document.getElementById("detail-overlay").classList.add("open");
 }
 
@@ -1205,26 +1114,18 @@ function toggleSidebar() {
   sidebar.classList.toggle("drawer-open", opening);
   overlay.classList.toggle("visible", opening);
 }
-
 document.getElementById("sidebar-overlay").addEventListener("click", () => {
   document.getElementById("sidebar").classList.remove("drawer-open");
   document.getElementById("sidebar-overlay").classList.remove("visible");
 });
 
-document.getElementById("q").addEventListener("keydown", e => {
-  if (e.key === "Enter") search(1);
-});
-
-// --- Tab switching ---
+// --- Tabs ---
 
 function switchTab(tab) {
-  const isBrowse   = tab === "browse";
-  const isSql      = tab === "sql";
-  const isViz      = tab === "viz";
-  const isGuide    = tab === "guide";
-  const isWorkflow = tab === "workflow";
-  document.getElementById("sidebar").style.display       = isBrowse ? "" : "none";
-  document.getElementById("main").style.display          = isBrowse ? "" : "none";
+  const isBrowse = tab === "browse", isSql = tab === "sql",
+        isViz = tab === "viz", isGuide = tab === "guide", isWorkflow = tab === "workflow";
+  document.getElementById("sidebar").style.display  = isBrowse ? "" : "none";
+  document.getElementById("main").style.display     = isBrowse ? "" : "none";
   document.getElementById("sql-view").classList.toggle("visible", isSql);
   document.getElementById("viz-view").classList.toggle("visible", isViz);
   document.getElementById("guide-view").classList.toggle("visible", isGuide);
@@ -1245,23 +1146,18 @@ function switchTab(tab) {
 let guideLoaded = false;
 async function loadGuide() {
   if (guideLoaded) return;
-  const res = await fetch("/GUIDE.md");
-  const md = await res.text();
+  const md = await fetch("GUIDE.md").then(r => r.text());
   document.getElementById("guide-body").innerHTML = marked.parse(md);
   guideLoaded = true;
 }
 
 // --- Visualizations ---
 
-let vizRows = [];
-let vizLabel = "";
-let vizActivePreset = "browse";
+let vizRows = [], vizLabel = "", vizActivePreset = "browse";
 const vizCharts = {};
 
 function destroyVizCharts() {
-  for (const c of Object.values(vizCharts)) {
-    try { c.destroy(); } catch (_) {}
-  }
+  for (const c of Object.values(vizCharts)) { try { c.destroy(); } catch (_) {} }
   Object.keys(vizCharts).forEach(k => delete vizCharts[k]);
 }
 
@@ -1273,44 +1169,25 @@ function parseUSD(s) {
   return m ? parseFloat(m[1]) : null;
 }
 
-function splitHomeStates(s) {
-  if (!s) return [];
-  return s.split(/[;\n]+/).map(x => x.trim()).filter(Boolean);
-}
-
 function aggregateForViz(rows) {
   const outcomeCounts = {};
-  for (const r of rows) {
-    const s = r.status || "Unknown";
-    outcomeCounts[s] = (outcomeCounts[s] || 0) + 1;
-  }
-  const outcomes = Object.entries(outcomeCounts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([label, count]) => ({ label, count }));
+  for (const r of rows) { const s = r.status || "Unknown"; outcomeCounts[s] = (outcomeCounts[s] || 0) + 1; }
+  const outcomes = Object.entries(outcomeCounts).sort((a,b) => b[1]-a[1]).map(([label,count]) => ({label,count}));
 
   const stateCounts = {};
-  for (const r of rows) {
-    for (const c of splitHomeStates(r.home_state)) {
+  for (const r of rows)
+    for (const c of (r.home_state || "").split(/[;\n]+/).map(x => x.trim()).filter(Boolean))
       stateCounts[c] = (stateCounts[c] || 0) + 1;
-    }
-  }
-  const homeStates = Object.entries(stateCounts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([country, count]) => ({ country, count }));
+  const homeStates = Object.entries(stateCounts).sort((a,b) => b[1]-a[1]).map(([country,count]) => ({country,count}));
 
-  const OUTCOME_KEY = {
-    "Decided in favour of investor": "investor",
-    "Decided in favour of State":    "state",
-    "Pending":                        "pending",
-    "Discontinued for unknown reasons": "discontinued",
-  };
-  const yearsMap = {};
+  const OK = { "Decided in favour of investor":"investor","Decided in favour of State":"state","Pending":"pending","Discontinued for unknown reasons":"discontinued" };
+  const ym = {};
   for (const r of rows) {
     if (!r.year) continue;
-    if (!yearsMap[r.year]) yearsMap[r.year] = { year: r.year, investor: 0, state: 0, pending: 0, discontinued: 0 };
-    yearsMap[r.year][OUTCOME_KEY[r.status] || "investor"]++;
+    if (!ym[r.year]) ym[r.year] = {year:r.year,investor:0,state:0,pending:0,discontinued:0};
+    ym[r.year][OK[r.status] || "investor"]++;
   }
-  const byYear = Object.values(yearsMap).sort((a, b) => a.year - b.year);
+  const byYear = Object.values(ym).sort((a,b) => a.year-b.year);
 
   const amounts = rows
     .map(r => ({
@@ -1321,7 +1198,7 @@ function aggregateForViz(rows) {
       enforcement_status: r.enforcement_status ?? null,
     }))
     .filter(a => a.claimed_usd !== null)
-    .sort((a, b) => (b.claimed_usd || 0) - (a.claimed_usd || 0));
+    .sort((a,b) => (b.claimed_usd||0)-(a.claimed_usd||0));
 
   return { total: rows.length, outcomes, homeStates, byYear, amounts };
 }
@@ -1331,99 +1208,72 @@ function renderViz() {
   destroyVizCharts();
   const agg = aggregateForViz(vizRows);
   document.getElementById("viz-source-text").textContent = vizLabel;
-  // Update preset button active state
   document.querySelectorAll(".viz-preset-btn").forEach(b => b.classList.remove("active"));
-  const activeBtn = document.getElementById("preset-" + vizActivePreset);
-  if (activeBtn) activeBtn.classList.add("active");
+  const ab = document.getElementById("preset-" + vizActivePreset);
+  if (ab) ab.classList.add("active");
   renderOutcomes(agg.outcomes);
   renderHomeStates(agg.homeStates);
   renderByYear(agg.byYear);
   renderAmounts(agg.amounts);
 }
 
-async function loadVizPreset(preset) {
+function loadVizPreset(preset) {
   vizActivePreset = preset;
+  const B = "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no";
+  const S = "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis";
+  const O = "ORDER BY cases.year DESC, cases.no ASC";
   if (preset === "spain") {
-    const res = await fetch("/api/search?respondent_state=Spain&all=1");
-    const data = await res.json();
-    vizRows = data.rows;
-    vizLabel = `Spain cases (${data.total})`;
+    vizRows = dbAll(`${S} ${B} WHERE cases.respondent_state LIKE '%Spain%' ${O}`);
+    vizLabel = `Spain cases (${vizRows.length})`;
   } else if (preset === "all") {
-    const res = await fetch("/api/search?all=1");
-    const data = await res.json();
-    vizRows = data.rows;
-    vizLabel = `All cases (${data.total})`;
-  } else if (preset === "browse") {
-    // Re-fetch current browse params
-    await updateVizFromBrowse();
+    vizRows = dbAll(`${S} ${B} ${O}`);
+    vizLabel = `All cases (${vizRows.length})`;
+  } else {
+    updateVizFromBrowse(); return;
   }
   renderViz();
 }
 
-async function updateVizFromBrowse() {
+function updateVizFromBrowse() {
   vizActivePreset = "browse";
-  const params = new URLSearchParams({ q: state.q, all: "1" });
-  for (const [k, v] of Object.entries(state.filters)) if (v) params.set(k, v);
-  const res = await fetch("/api/search?" + params);
-  const data = await res.json();
-  vizRows = data.rows;
+  const { where, args } = buildSearchSQL(state.q, state.filters);
+  const B = "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no";
+  vizRows = dbAll(
+    `SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis ${B} ${where} ORDER BY cases.year DESC, cases.no ASC`,
+    args
+  );
   const parts = [];
   if (state.q) parts.push(`"${state.q}"`);
   if (state.filters.respondent_state) parts.push(state.filters.respondent_state);
   if (state.filters.enforcement_status) parts.push(ENF_LABELS[state.filters.enforcement_status] ?? state.filters.enforcement_status);
-  vizLabel = parts.length
-    ? `Browse: ${parts.join(", ")} (${data.total})`
-    : `Browse: All Cases (${data.total})`;
+  vizLabel = parts.length ? `Browse: ${parts.join(", ")} (${vizRows.length})` : `Browse: All Cases (${vizRows.length})`;
   if (document.getElementById("viz-view").classList.contains("visible")) renderViz();
 }
 
-function isCaseData(columns) {
-  return columns.includes("status") && columns.includes("year");
-}
+function isCaseData(columns) { return columns.includes("status") && columns.includes("year"); }
 
 const OUTCOME_COLORS = {
-  "Decided in favour of investor":        "#10b981",
-  "Decided in favour of State":           "#ef4444",
-  "Pending":                              "#f59e0b",
-  "Discontinued for unknown reasons":     "#9ca3af",
+  "Decided in favour of investor": "#10b981", "Decided in favour of State": "#ef4444",
+  "Pending": "#f59e0b", "Discontinued for unknown reasons": "#9ca3af",
 };
-
 const ENF_COLORS = {
-  paid:         "#10b981",
-  enforced:     "#3b82f6",
-  not_paid:     "#f59e0b",
-  blocked:      "#ef4444",
-  state_won:    "#9ca3af",
-  discontinued: "#d1d5db",
-  pending:      "#8b5cf6",
+  paid:"#10b981", enforced:"#3b82f6", not_paid:"#f59e0b",
+  blocked:"#ef4444", state_won:"#9ca3af", discontinued:"#d1d5db", pending:"#8b5cf6",
 };
-const ENF_ORDER = ["enforced", "not_paid", "blocked", "paid", "state_won", "pending", "discontinued"];
+const ENF_ORDER = ["enforced","not_paid","blocked","paid","state_won","pending","discontinued"];
 
 function renderOutcomes(outcomes) {
   vizCharts.outcomes = new Chart(document.getElementById("chart-outcomes"), {
     type: "doughnut",
     data: {
       labels: outcomes.map(o => o.label),
-      datasets: [{
-        data: outcomes.map(o => o.count),
-        backgroundColor: outcomes.map(o => OUTCOME_COLORS[o.label] ?? "#c4b5fd"),
-        borderWidth: 2,
-        borderColor: "#fff",
-      }],
+      datasets: [{ data: outcomes.map(o => o.count), backgroundColor: outcomes.map(o => OUTCOME_COLORS[o.label] ?? "#c4b5fd"), borderWidth: 2, borderColor: "#fff" }],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: "right",
-          labels: { font: { size: 12 }, padding: 14, boxWidth: 14 },
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.label}: ${ctx.raw} cases`,
-          },
-        },
+        legend: { position: "right", labels: { font: { size: 12 }, padding: 14, boxWidth: 14 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} cases` } },
       },
     },
   });
@@ -1433,23 +1283,11 @@ function renderHomeStates(homeStates) {
   const top = homeStates.slice(0, 14);
   vizCharts.homeStates = new Chart(document.getElementById("chart-homestates"), {
     type: "bar",
-    data: {
-      labels: top.map(s => s.country),
-      datasets: [{
-        data:  top.map(s => s.count),
-        backgroundColor: "#4a9eda",
-        borderRadius: 3,
-      }],
-    },
+    data: { labels: top.map(s => s.country), datasets: [{ data: top.map(s => s.count), backgroundColor: "#4a9eda", borderRadius: 3 }] },
     options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: {
-        x: { beginAtZero: true, ticks: { stepSize: 1 } },
-        y: { ticks: { font: { size: 12 } } },
-      },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { font: { size: 12 } } } },
     },
   });
 }
@@ -1467,13 +1305,9 @@ function renderByYear(byYear) {
       ],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 10 } } },
-      scales: {
-        x: { stacked: true },
-        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } },
-      },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } },
     },
   });
 }
@@ -1484,14 +1318,8 @@ function renderAmounts(amounts) {
   const maxAward = withAward.length ? Math.max(...withAward.map(a => a.awarded_usd), 100) : 100;
   const yMax = Math.ceil(maxAward * 1.3 / 50) * 50;
 
-  // Group by enforcement_status; cases with no research data go into "other"
   const groups = {};
-  for (const a of amounts) {
-    const key = a.enforcement_status ?? "other";
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(a);
-  }
-
+  for (const a of amounts) { const k = a.enforcement_status ?? "other"; if (!groups[k]) groups[k] = []; groups[k].push(a); }
   const orderedKeys = [
     ...ENF_ORDER.filter(k => groups[k]),
     ...Object.keys(groups).filter(k => !ENF_ORDER.includes(k) && k !== "other"),
@@ -1500,34 +1328,21 @@ function renderAmounts(amounts) {
 
   const datasets = orderedKeys.map(key => ({
     label: ENF_LABELS[key] ?? (key === "other" ? "No data" : key),
-    data: groups[key].map(a => ({
-      x: a.claimed_usd,
-      y: a.awarded_usd ?? 0,
-      name: a.name,
-      noAward: a.awarded_usd === null,
-    })),
+    data: groups[key].map(a => ({ x: a.claimed_usd, y: a.awarded_usd ?? 0, name: a.name, noAward: a.awarded_usd === null })),
     backgroundColor: ENF_COLORS[key] ?? "#aaa",
-    pointRadius: 5,
-    pointHoverRadius: 7,
+    pointRadius: 5, pointHoverRadius: 7,
   }));
-
   datasets.push({
-    label: "Claimed = Awarded (ref.)",
-    type: "line",
+    label: "Claimed = Awarded (ref.)", type: "line",
     data: [{ x: 0, y: 0 }, { x: maxClaim, y: maxClaim }],
-    borderColor: "rgba(0,0,0,.15)",
-    borderDash: [6, 4],
-    pointRadius: 0,
-    fill: false,
-    tension: 0,
+    borderColor: "rgba(0,0,0,.15)", borderDash: [6, 4], pointRadius: 0, fill: false, tension: 0,
   });
 
   vizCharts.amounts = new Chart(document.getElementById("chart-amounts"), {
     type: "scatter",
     data: { datasets },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
         tooltip: {
@@ -1535,8 +1350,7 @@ function renderAmounts(amounts) {
             label: ctx => {
               const d = ctx.raw;
               if (!d.name) return "";
-              if (d.noAward) return ` ${d.name}: claimed ${d.x}M (no award yet)`;
-              return ` ${d.name}: claimed ${d.x}M → awarded ${d.y}M`;
+              return d.noAward ? ` ${d.name}: claimed ${d.x}M (no award yet)` : ` ${d.name}: claimed ${d.x}M → awarded ${d.y}M`;
             },
           },
           filter: item => !!item.raw.name,
@@ -1550,18 +1364,101 @@ function renderAmounts(amounts) {
   });
 }
 
+// --- SQL tab ---
+
+function sqlLiteral(s) { return "'" + String(s).replace(/'/g, "''") + "'"; }
+
+function buildBrowseSql() {
+  const clauses = [];
+  if (state.q) {
+    clauses.push(
+      `(cases.no IN (SELECT rowid FROM cases_fts WHERE cases_fts MATCH ${sqlLiteral(state.q)})\n` +
+      `  OR cases.no IN (SELECT rowid FROM research_notes_fts WHERE research_notes_fts MATCH ${sqlLiteral(state.q)}))`
+    );
+  }
+  for (const [k, v] of Object.entries(state.filters)) {
+    if (!v) continue;
+    if (k === "enforcement_status") clauses.push(`rn.enforcement_status = ${sqlLiteral(v)}`);
+    else clauses.push(`cases.${k} = ${sqlLiteral(v)}`);
+  }
+  const where = clauses.length ? "\nWHERE " + clauses.join("\n  AND ") : "";
+  return "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis\nFROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no" + where + "\nORDER BY cases.year DESC, cases.no ASC\nLIMIT 50";
+}
+
+let sqlUserEdited = false;
+document.getElementById("sql-input").addEventListener("input", () => { sqlUserEdited = true; });
+
+function runSql() {
+  const sql = document.getElementById("sql-input").value.trim();
+  if (!sql) return;
+  const statusEl = document.getElementById("sql-status");
+  const errorEl  = document.getElementById("sql-error");
+  const resultEl = document.getElementById("sql-result-wrap");
+
+  const first = sql.replace(/\/\*[\s\S]*?\*\//g, "").trim().toUpperCase().split(/\s+/)[0];
+  if (!["SELECT","WITH","EXPLAIN","PRAGMA"].includes(first)) {
+    errorEl.textContent = "Only SELECT / WITH / EXPLAIN / PRAGMA queries are allowed.";
+    statusEl.textContent = "";
+    return;
+  }
+
+  statusEl.textContent = "Running…";
+  errorEl.textContent = "";
+  resultEl.innerHTML = "";
+
+  const t0 = performance.now();
+  try {
+    const results = db.exec(sql);
+    const ms = (performance.now() - t0).toFixed(0);
+
+    if (!results.length) {
+      statusEl.textContent = `0 rows · ${ms}ms`;
+      resultEl.innerHTML = "<div style='padding:20px;color:#999'>No rows returned.</div>";
+      return;
+    }
+
+    const { columns, values } = results[0];
+    statusEl.textContent = `${values.length} row${values.length !== 1 ? "s" : ""} · ${ms}ms`;
+
+    if (isCaseData(columns)) {
+      vizRows = values.map(row => { const o = {}; columns.forEach((c,i) => o[c] = row[i]); return o; });
+      vizLabel = `SQL results (${values.length} rows)`;
+      vizActivePreset = "browse";
+      if (document.getElementById("viz-view").classList.contains("visible")) renderViz();
+    }
+
+    const thead = `<thead><tr>${columns.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>`;
+    const tbody = `<tbody>${values.map(row =>
+      `<tr>${row.map(v => `<td title="${esc(String(v ?? ""))}">${esc(String(v ?? ""))}</td>`).join("")}</tr>`
+    ).join("")}</tbody>`;
+    resultEl.innerHTML = `<table>${thead}${tbody}</table>`;
+  } catch (e) {
+    errorEl.textContent = e.message;
+    statusEl.textContent = "";
+  }
+}
+
+document.getElementById("sql-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runSql();
+});
+
 // --- Case Browser ---
 
-let wfCases = [];
-let wfIndex = 0;
+let wfCases = [], wfIndex = 0;
 
-async function loadWorkflow() {
+function loadWorkflow() {
   if (wfCases.length) { renderWfCase(); return; }
-  document.getElementById("wf-case-info").textContent = "Loading…";
-  const res = await fetch("/api/workflow");
-  wfCases = await res.json();
-  const sel = document.getElementById("wf-case-select");
-  sel.innerHTML = wfCases.map((c, i) =>
+  wfCases = dbAll(
+    `SELECT cases.no, cases.short_name, cases.full_name, cases.year, cases.status,
+            cases.amount_claimed_m, cases.amount_awarded_m, cases.applicable_iia,
+            cases.sector, cases.summary, cases.investment_details, cases.italaw_link,
+            rn.enforcement_status, rn.enforcement_detail,
+            rn.context, rn.claim_basis, rn.significance, rn.updated_at AS research_updated_at
+     FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no
+     WHERE cases.respondent_state LIKE '%Spain%'
+     ORDER BY CAST(REPLACE(SUBSTR(cases.amount_claimed_m, INSTR(cases.amount_claimed_m, '(') + 1), ' USD)', '') AS REAL) DESC, cases.year ASC`
+  );
+  document.getElementById("wf-case-select").innerHTML = wfCases.map((c, i) =>
     `<option value="${i}">${esc(c.short_name)} (${c.year ?? "?"})</option>`
   ).join("");
   renderWfCase();
@@ -1572,16 +1469,11 @@ function wfGo(delta) {
   renderWfCase();
 }
 
-function wfJump(val) {
-  wfIndex = parseInt(val, 10);
-  renderWfCase();
-}
+function wfJump(val) { wfIndex = parseInt(val, 10); renderWfCase(); }
 
 function wfMetaField(label, value, full) {
   if (!value) return "";
-  return `<div class="wf-meta-field${full ? " wf-meta-full" : ""}">
-    <label>${label}</label><div class="val">${esc(value)}</div>
-  </div>`;
+  return `<div class="wf-meta-field${full ? " wf-meta-full" : ""}"><label>${label}</label><div class="val">${esc(value)}</div></div>`;
 }
 
 function renderWfCase() {
@@ -1607,27 +1499,23 @@ function renderWfCase() {
       ${wfMetaField("Summary", c.summary, true)}
       ${wfMetaField("Investment Details", c.investment_details, true)}
       ${italaw}
-    </div>
-  `;
+    </div>`;
 
   const noteFields = [
     c.enforcement_status ? `<div class="research-field"><label>Enforcement Status</label><div class="val">${enfBadge(c.enforcement_status)}</div></div>` : "",
     c.enforcement_detail ? `<div class="research-field"><label>Enforcement Detail</label><div class="val">${esc(c.enforcement_detail)}</div></div>` : "",
-    c.context            ? `<div class="research-field"><label>Context</label><div class="val">${esc(c.context)}</div></div>` : "",
-    c.claim_basis        ? `<div class="research-field"><label>Claim Basis</label><div class="val">${esc(c.claim_basis)}</div></div>` : "",
-    c.significance       ? `<div class="research-field"><label>Significance</label><div class="val">${esc(c.significance)}</div></div>` : "",
+    c.context     ? `<div class="research-field"><label>Context</label><div class="val">${esc(c.context)}</div></div>` : "",
+    c.claim_basis ? `<div class="research-field"><label>Claim Basis</label><div class="val">${esc(c.claim_basis)}</div></div>` : "",
+    c.significance? `<div class="research-field"><label>Significance</label><div class="val">${esc(c.significance)}</div></div>` : "",
   ].filter(Boolean).join("");
 
   document.getElementById("wf-notes-content").innerHTML = noteFields
     ? `<div class="research-section"><h3>Research Notes</h3>${noteFields}${
-        c.research_updated_at
-          ? `<div class="wf-timestamp" style="margin-top:10px">Updated ${c.research_updated_at.slice(0,10)}</div>`
-          : ""
+        c.research_updated_at ? `<div class="wf-timestamp" style="margin-top:10px">Updated ${c.research_updated_at.slice(0,10)}</div>` : ""
       }</div>`
     : `<div style="color:#999;font-size:13px;padding:16px 0">No research notes for this case.</div>`;
 }
 
-// Arrow-key navigation in Case Browser
 document.addEventListener("keydown", e => {
   if (!document.getElementById("workflow-view").classList.contains("visible")) return;
   const tag = document.activeElement?.tagName;
@@ -1636,107 +1524,24 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowRight") { e.preventDefault(); wfGo(1); }
 });
 
-// --- SQL ---
-
-function sqlLiteral(s) {
-  return "'" + String(s).replace(/'/g, "''") + "'";
-}
-
-function buildBrowseSql() {
-  const clauses = [];
-
-  if (state.q) {
-    clauses.push(
-      `(cases.no IN (SELECT rowid FROM cases_fts WHERE cases_fts MATCH ${sqlLiteral(state.q)})\n` +
-      `  OR cases.no IN (SELECT rowid FROM research_notes_fts WHERE research_notes_fts MATCH ${sqlLiteral(state.q)}))`
-    );
-  }
-
-  for (const [k, v] of Object.entries(state.filters)) {
-    if (!v) continue;
-    if (k === "enforcement_status") {
-      clauses.push(`rn.enforcement_status = ${sqlLiteral(v)}`);
-    } else {
-      clauses.push(`cases.${k} = ${sqlLiteral(v)}`);
-    }
-  }
-
-  const where = clauses.length
-    ? "\nWHERE " + clauses.join("\n  AND ")
-    : "";
-
-  return (
-    "SELECT cases.*, rn.enforcement_status, rn.context, rn.claim_basis\n" +
-    "FROM cases LEFT JOIN research_notes rn ON cases.no = rn.case_no" +
-    where +
-    "\nORDER BY cases.year DESC, cases.no ASC\nLIMIT 50"
-  );
-}
-
-let sqlUserEdited = false;
-
-document.getElementById("sql-input").addEventListener("input", () => {
-  sqlUserEdited = true;
+document.getElementById("q").addEventListener("keydown", e => {
+  if (e.key === "Enter") search(1);
 });
 
-async function runSql() {
-  const sql = document.getElementById("sql-input").value.trim();
-  if (!sql) return;
-  const statusEl = document.getElementById("sql-status");
-  const errorEl  = document.getElementById("sql-error");
-  const resultEl = document.getElementById("sql-result-wrap");
-  statusEl.textContent = "Running…";
-  errorEl.textContent = "";
-  resultEl.innerHTML = "";
+// --- Init ---
 
-  const t0 = performance.now();
-  const res = await fetch("/api/sql", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sql }),
+(async () => {
+  const SQL = await initSqlJs({
+    locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
   });
-  const data = await res.json();
-  const ms = (performance.now() - t0).toFixed(0);
-
-  if (data.error) {
-    errorEl.textContent = data.error;
-    statusEl.textContent = "";
-    return;
-  }
-
-  statusEl.textContent = `${data.count} row${data.count !== 1 ? "s" : ""} · ${ms}ms`;
-
-  if (isCaseData(data.columns)) {
-    vizRows = data.rows.map(row => {
-      const obj = {};
-      data.columns.forEach((col, i) => obj[col] = row[i]);
-      return obj;
-    });
-    vizLabel = `SQL results (${data.count} rows)`;
-    vizActivePreset = "browse"; // clear preset highlight
-    if (document.getElementById("viz-view").classList.contains("visible")) renderViz();
-  }
-
-  if (!data.rows.length) {
-    resultEl.innerHTML = "<div style='padding:20px;color:#999'>No rows returned.</div>";
-    return;
-  }
-
-  const thead = `<thead><tr>${data.columns.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>`;
-  const tbody = `<tbody>${data.rows.map(row =>
-    `<tr>${row.map(v => `<td title="${esc(String(v ?? ""))}">${esc(String(v ?? ""))}</td>`).join("")}</tr>`
-  ).join("")}</tbody>`;
-  resultEl.innerHTML = `<table>${thead}${tbody}</table>`;
-}
-
-document.getElementById("sql-input").addEventListener("keydown", e => {
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runSql();
-});
-
-// Init — default to Spain cases
-state.filters.respondent_state = "Spain";
-loadFacets().then(() => search(1));
-loadEnforcementIndex();
+  const buf = await fetch("isds.db").then(r => r.arrayBuffer());
+  db = new SQL.Database(new Uint8Array(buf));
+  document.getElementById("loading-overlay").remove();
+  state.filters.respondent_state = "Spain";
+  loadFacets();
+  search(1);
+  loadEnforcementIndex();
+})();
 </script>
 </body>
 </html>
