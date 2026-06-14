@@ -1199,6 +1199,7 @@ function aggregateForViz(rows) {
       claimed_usd: parseUSD(r.amount_claimed_m),
       awarded_usd: parseUSD(r.amount_awarded_m),
       status: r.status, year: r.year,
+      enforcement_status: r.enforcement_status ?? null,
     }))
     .filter(a => a.claimed_usd !== null)
     .sort((a, b) => (b.claimed_usd || 0) - (a.claimed_usd || 0));
@@ -1267,6 +1268,17 @@ const OUTCOME_COLORS = {
   "Pending":                              "#f59e0b",
   "Discontinued for unknown reasons":     "#9ca3af",
 };
+
+const ENF_COLORS = {
+  paid:         "#10b981",
+  enforced:     "#3b82f6",
+  not_paid:     "#f59e0b",
+  blocked:      "#ef4444",
+  state_won:    "#9ca3af",
+  discontinued: "#d1d5db",
+  pending:      "#8b5cf6",
+};
+const ENF_ORDER = ["enforced", "not_paid", "blocked", "paid", "state_won", "pending", "discontinued"];
 
 function renderOutcomes(outcomes) {
   vizCharts.outcomes = new Chart(document.getElementById("chart-outcomes"), {
@@ -1348,55 +1360,64 @@ function renderByYear(byYear) {
 }
 
 function renderAmounts(amounts) {
-  const withBoth  = amounts.filter(a => a.awarded_usd !== null);
-  const claimOnly = amounts.filter(a => a.awarded_usd === null);
-
   const maxClaim = Math.max(...amounts.map(a => a.claimed_usd), 100);
-  const maxAward = Math.max(...withBoth.map(a => a.awarded_usd), 100);
+  const withAward = amounts.filter(a => a.awarded_usd !== null);
+  const maxAward = withAward.length ? Math.max(...withAward.map(a => a.awarded_usd), 100) : 100;
   const yMax = Math.ceil(maxAward * 1.3 / 50) * 50;
+
+  // Group by enforcement_status; cases with no research data go into "other"
+  const groups = {};
+  for (const a of amounts) {
+    const key = a.enforcement_status ?? "other";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(a);
+  }
+
+  const orderedKeys = [
+    ...ENF_ORDER.filter(k => groups[k]),
+    ...Object.keys(groups).filter(k => !ENF_ORDER.includes(k) && k !== "other"),
+    ...(groups["other"] ? ["other"] : []),
+  ];
+
+  const datasets = orderedKeys.map(key => ({
+    label: ENF_LABELS[key] ?? (key === "other" ? "No data" : key),
+    data: groups[key].map(a => ({
+      x: a.claimed_usd,
+      y: a.awarded_usd ?? 0,
+      name: a.name,
+      noAward: a.awarded_usd === null,
+    })),
+    backgroundColor: ENF_COLORS[key] ?? "#aaa",
+    pointRadius: 5,
+    pointHoverRadius: 7,
+  }));
+
+  datasets.push({
+    label: "Claimed = Awarded (ref.)",
+    type: "line",
+    data: [{ x: 0, y: 0 }, { x: maxClaim, y: maxClaim }],
+    borderColor: "rgba(0,0,0,.15)",
+    borderDash: [6, 4],
+    pointRadius: 0,
+    fill: false,
+    tension: 0,
+  });
 
   vizCharts.amounts = new Chart(document.getElementById("chart-amounts"), {
     type: "scatter",
-    data: {
-      datasets: [
-        {
-          label: "Award decided",
-          data: withBoth.map(a => ({ x: a.claimed_usd, y: a.awarded_usd, name: a.short_name })),
-          backgroundColor: "#10b981",
-          pointRadius: 5,
-          pointHoverRadius: 7,
-        },
-        {
-          label: "No award yet",
-          data: claimOnly.map(a => ({ x: a.claimed_usd, y: 0, name: a.short_name, noAward: true })),
-          backgroundColor: "#f59e0b",
-          pointRadius: 4,
-          pointHoverRadius: 6,
-        },
-        {
-          label: "Claimed = Awarded (reference)",
-          type: "line",
-          data: [{ x: 0, y: 0 }, { x: maxClaim, y: maxClaim }],
-          borderColor: "rgba(0,0,0,.15)",
-          borderDash: [6, 4],
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-        },
-      ],
-    },
+    data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 10 } },
+        legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
         tooltip: {
           callbacks: {
             label: ctx => {
               const d = ctx.raw;
+              if (!d.name) return "";
               if (d.noAward) return ` ${d.name}: claimed ${d.x}M (no award yet)`;
-              if (d.name)    return ` ${d.name}: claimed ${d.x}M → awarded ${d.y}M`;
-              return "";
+              return ` ${d.name}: claimed ${d.x}M → awarded ${d.y}M`;
             },
           },
           filter: item => !!item.raw.name,

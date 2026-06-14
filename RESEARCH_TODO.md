@@ -11,6 +11,7 @@
 - [x] SQL tab pre-populates with current Browse query
 - [x] Guide tab with rendered GUIDE.md
 - [x] SPAIN_ANALYSIS.md — 18-question statistical breakdown
+- [x] Scatter chart dots colored by enforcement_status (grouped datasets, one per status)
 
 ---
 
@@ -40,5 +41,4 @@ iPhone SE / mini viewport: 375×667px. Current layout is desktop-only (sidebar +
 
 - Per-case `sources` URLs field (currently not tracked in research_notes)
 - Research workflow view: Spain cases one at a time for annotation/review
-- Scatter/bar chart dots colored by enforcement_status
 - `key_facts` field per case (planned in original schema but not yet added)
