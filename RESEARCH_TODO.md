@@ -1,72 +1,44 @@
-# Next Feature: Case-by-Case Research Notes for Spain Disputes
+# ISDS Navigator — Research & Feature Roadmap
 
-## Goal
-Go through all 56 Spain cases one at a time, do external research on each
-(news, ICSID documents, legal commentary, Italaw), and store structured notes
-that the tool can display alongside the UNCTAD data.
+## Completed
 
-## Workflow (per case)
-1. Open the case detail panel in the app.
-2. Follow the Italaw link (already in the DB) to read the case page.
-3. Search for news coverage and legal commentary.
-4. Write a short research note in the format below.
-5. Commit after each batch of 5–10 cases.
+- [x] `research_notes` table with enforcement status for all 56 Spain cases (paid/enforced/not_paid/blocked/state_won/discontinued/pending)
+- [x] `enforcement_proceedings` table — structured per-forum rows (forum, result, date, notes)
+- [x] Full-text search across research notes fields (enforcement_detail, context, claim_basis, significance)
+- [x] Enforcement badge column in Browse table
+- [x] Case detail panel shows research notes fields
+- [x] Visualizations tab tracks current Browse result set; preset buttons (Current Browse, Spain, All Cases)
+- [x] SQL tab pre-populates with current Browse query
+- [x] Guide tab with rendered GUIDE.md
+- [x] SPAIN_ANALYSIS.md — 18-question statistical breakdown
 
-## Data to collect per case
-- `context`: 2–4 sentences on the investment and why the dispute arose
-- `claim_basis`: what legal theory the investor relied on (FET, expropriation, etc.)
-- `key_facts`: one-paragraph summary of key facts not in the UNCTAD summary
-- `significance`: why this case matters (precedent, amount, novel issue)
-- `sources`: list of URLs used for research
+---
 
-Priority order: cases with real award amounts first (42 cases already have USD
-figures), then pending/unknown-amount cases.
+## Next: Mobile-Friendly View (iPhone mini target)
 
-## Implementation plan
+iPhone SE / mini viewport: 375×667px. Current layout is desktop-only (sidebar + table, fixed header, multi-column grids).
 
-### Step 1 — Add `research_notes` table to the DB
-```sql
-CREATE TABLE research_notes (
-    case_no      INTEGER PRIMARY KEY REFERENCES cases(no),
-    context      TEXT,
-    claim_basis  TEXT,
-    key_facts    TEXT,
-    significance TEXT,
-    sources      TEXT,   -- newline-separated URLs
-    updated_at   TEXT    -- ISO datetime
-);
-```
-Regenerate `isds.db` by running `convert.py` and then applying this migration,
-OR add the table in a separate `migrate.py` that runs once and is idempotent.
+### Changes needed
 
-### Step 2 — Seed script
-Write `research.py` (or use the SQL tab) to INSERT notes one case at a time.
-No UI needed for data entry — just SQL or a simple CLI.
+1. **Responsive layout** — sidebar collapses to a drawer (toggle button in header); table scrolls horizontally or switches to card list below ~600px
+2. **Header** — stack title + search vertically on small screens; tab bar wraps or scrolls horizontally
+3. **Browse tab** — card-per-row list instead of wide table on mobile; show short_name, year, status, enforcement badge
+4. **Detail panel** — full-screen overlay on mobile (currently a right-side split panel)
+5. **Visualizations tab** — charts resize to single-column stack; touch-friendly tap targets on chart elements
+6. **SQL tab** — textarea stays full width; result table scrolls horizontally
+7. **Facet sidebar** — off-canvas drawer triggered by a "Filters" button; overlay closes on tap-outside
 
-### Step 3 — Expose notes in the API
-- `GET /api/case?no=N` — extend existing response to include research notes
-  fields if a row exists in `research_notes`.
+### Implementation notes
 
-### Step 4 — Display in case detail panel
-- In `showDetail()`, render the research fields below the existing grid when
-  they are non-empty.
-- Add a subtle "Research" badge to the case row in the browse table when
-  a note exists (requires a join or a pre-fetched set of annotated case IDs).
+- Add `@media (max-width: 600px)` breakpoints to the `<style>` block in `index.html`
+- No JS framework needed — CSS flex/grid restructuring only, plus a small JS toggle for the filter drawer
+- Test at 375px width (iPhone mini/SE) and 390px (iPhone 14)
 
-### Step 5 — Spain tab: highlight researched cases
-- In the amounts scatter chart and by-year chart, mark dots/bars that have
-  research notes with a darker outline or click handler that opens the detail.
+---
 
-## Cases to research (sorted by claimed amount, desc)
-Run this query in the SQL tab to get the current list:
+## Backlog
 
-```sql
-SELECT c.no, c.short_name, c.year, c.status,
-       c.amount_claimed_m, c.amount_awarded_m,
-       CASE WHEN r.case_no IS NOT NULL THEN 'done' ELSE '' END AS researched
-FROM cases c
-LEFT JOIN research_notes r ON c.no = r.case_no
-WHERE c.respondent_state LIKE '%Spain%'
-ORDER BY CAST(REPLACE(SUBSTR(c.amount_claimed_m, INSTR(c.amount_claimed_m,'(')+1),
-              ' USD)', '') AS REAL) DESC NULLS LAST;
-```
+- Per-case `sources` URLs field (currently not tracked in research_notes)
+- Research workflow view: Spain cases one at a time for annotation/review
+- Scatter/bar chart dots colored by enforcement_status
+- `key_facts` field per case (planned in original schema but not yet added)
