@@ -759,7 +759,7 @@
     </div>
     <div class="spain-grid">
       <div class="spain-card spain-card-wide">
-        <h3>Spain ECT Case Flow <span class="card-sub">— each ribbon is one case; hover to identify, click to open · dashed lines = policy/legal events</span></h3>
+        <h3>Spain ECT Case Flow <span class="card-sub">— each ribbon is one case · vivid = non-EU investor · faded = EU investor · dashed lines = policy/legal events · hover or click for detail</span></h3>
         <div class="chart-wrap-alluvial"><canvas id="chart-alluvial" style="width:100%;height:100%;display:block"></canvas></div>
       </div>
       <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
@@ -787,7 +787,8 @@
         <span id="event-modal-date" style="font-size:12px;color:#888"></span>
         <button onclick="closeEventModal()" style="margin-left:auto;font-size:20px;background:none;border:none;cursor:pointer;color:#999;line-height:1;padding:0">✕</button>
       </div>
-      <h3 id="event-modal-title" style="font-size:16px;margin:0 0 10px;color:#1a3a5c"></h3>
+      <h3 id="event-modal-title" style="font-size:16px;margin:0 0 4px;color:#1a3a5c"></h3>
+      <p id="event-modal-label" style="font-size:12px;color:#888;margin:0 0 12px;font-style:italic"></p>
       <p id="event-modal-detail" style="font-size:13px;line-height:1.65;color:#444;margin:0 0 14px"></p>
       <a id="event-modal-source" target="_blank" rel="noopener" style="font-size:12px;color:#1a3a5c;text-decoration:none;border-bottom:1px solid #1a3a5c">Source ↗</a>
     </div>
@@ -1790,6 +1791,11 @@ function renderGantt() {
 
 // --- Alluvial flow chart ---
 
+const NON_EU_STATES = new Set([
+  'Japan','Switzerland','Mexico','Panama','Argentina','Venezuela',
+  'United States','Canada','Australia','China','South Korea','India',
+]);
+
 const ALLUVIAL_YEAR_START = 2006;
 const ALLUVIAL_YEAR_END = 2026;
 const ALLUVIAL_STATE_ORDER = ['paid','enforced','not_paid','blocked','state_won','discontinued','pending'];
@@ -1825,7 +1831,7 @@ function extractDecisionYear(decisions, status) {
 function buildAlluvialCases() {
   const rows = dbAll(`
     SELECT c.no, c.short_name, c.year AS year_filed, c.status, c.decisions,
-           rn.enforcement_status
+           c.home_state, rn.enforcement_status
     FROM cases c LEFT JOIN research_notes rn ON c.no = rn.case_no
     WHERE c.respondent_state LIKE '%Spain%'
     ORDER BY c.year, c.no
@@ -1843,11 +1849,14 @@ function buildAlluvialCases() {
     const enfRaw = enfMap[r.no];
     const yearEnf = isMaffezini ? ALLUVIAL_YEAR_START
                   : (enfRaw ? Math.floor(parseEnfDate(enfRaw)) : null);
+    const homeStates = (r.home_state || '').split(/[;\n]+/).map(s => s.trim()).filter(Boolean);
+    const isNonEU = homeStates.some(s => NON_EU_STATES.has(s));
     return {
       no: r.no, name: r.short_name,
       yearFiled, yearDecided, yearEnf,
       status: r.status,
       enfStatus: r.enforcement_status || 'not_paid',
+      isNonEU,
     };
   });
 }
@@ -1874,13 +1883,24 @@ function computeAlluvialY(cases, year, ribbonH, gap, bottomY) {
     const state = getCaseStateAt(c, year);
     if (state !== null) groups[state].push(c);
   }
-  for (const g of Object.values(groups)) g.sort((a, b) => a.no - b.no);
+  for (const g of Object.values(groups)) {
+    // Within each state band: EU cases at bottom (processed first), non-EU above
+    g.sort((a, b) => {
+      if (a.isNonEU !== b.isNonEU) return a.isNonEU ? 1 : -1;
+      return a.no - b.no;
+    });
+  }
   const pos = {};
   let y = bottomY;
   // Stack upward: reverse order so pending sits at the bottom, paid floats to the top
   for (const k of [...ALLUVIAL_STATE_ORDER].reverse()) {
     const grp = groups[k];
-    for (const c of grp) { y -= ribbonH; pos[c.no] = { y, state: k }; y -= gap; }
+    let lastWasEU = true;
+    for (const c of grp) {
+      if (lastWasEU && c.isNonEU) y -= 2; // gap between EU and non-EU sub-bands
+      lastWasEU = !c.isNonEU;
+      y -= ribbonH; pos[c.no] = { y, state: k }; y -= gap;
+    }
     if (grp.length) y -= 3;
   }
   return { pos, groups };
@@ -2008,12 +2028,13 @@ function renderAlluvial() {
       if (!p0 && !p1) continue;
       if (!p0 && p1) {
         // Case born — entry tick at left edge of its first active segment
-        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + 'aa';
+        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (c.isNonEU ? 'ee' : '99');
         ctx.fillRect(x1, p1.y, 3, ribbonH);
         continue;
       }
       if (p0 && !p1) continue;
-      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + 'cc';
+      // Non-EU investors: full opacity (vivid); EU investors: lighter shade
+      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (c.isNonEU ? 'ff' : 'aa');
       ctx.beginPath();
       ctx.moveTo(x0, p0.y);
       ctx.bezierCurveTo(cpx, p0.y, cpx, p1.y, x1, p1.y);
@@ -2038,21 +2059,20 @@ function renderAlluvial() {
     };
     ctx.setLineDash([]);
     if (pvHovered) {
-      // Glow pass behind
-      pvPath(); ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 12; ctx.globalAlpha = 0.55; ctx.stroke();
+      pvPath(); ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 14; ctx.globalAlpha = 0.4; ctx.stroke();
       ctx.globalAlpha = 1;
     }
     // 5px black base
     pvPath(); ctx.strokeStyle = '#000'; ctx.lineWidth = 5; ctx.stroke();
-    // 2.5px yellow on top
-    pvPath(); ctx.strokeStyle = pvHovered ? '#fbbf24' : '#f59e0b'; ctx.lineWidth = 2.5; ctx.stroke();
+    // 2.5px true yellow on top
+    pvPath(); ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2.5; ctx.stroke();
     // Label
     const gw24 = alluvialPvCapMap[2024];
     if (gw24) {
       const ly = RIBBON_BOTTOM - (gw24 / pvMax) * ribbonAreaH;
       ctx.font = `${pvHovered ? 'bold ' : ''}10px system-ui,sans-serif`;
       ctx.textAlign = 'left';
-      ctx.shadowColor = pvHovered ? '#fbbf24' : '#f59e0b';
+      ctx.shadowColor = '#ffff00';
       ctx.shadowBlur = pvHovered ? 8 : 3;
       ctx.fillStyle = '#000';
       ctx.fillText('Solar PV (GW)', xOf(2024) + 4, ly - 5);
@@ -2086,7 +2106,8 @@ function openEventModal(ev) {
   badge.style.background = (EVENT_COLORS[ev.category] ?? '#aaa') + '22';
   badge.style.color = EVENT_COLORS[ev.category] ?? '#aaa';
   document.getElementById("event-modal-date").textContent = ev.date;
-  document.getElementById("event-modal-title").textContent = ev.label;
+  document.getElementById("event-modal-title").textContent = ev.title || ev.label;
+  document.getElementById("event-modal-label").textContent = ev.label;
   document.getElementById("event-modal-detail").textContent = ev.detail;
   const src = document.getElementById("event-modal-source");
   if (ev.source) { src.href = ev.source; src.style.display = ""; }

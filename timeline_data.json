@@ -25,6 +25,7 @@
   "events": [
     {
       "date": "2007-05-25",
+      "title": "Feed-in tariff scheme begins",
       "label": "RD 661/2007",
       "category": "incentive",
       "detail": "Royal Decree 661/2007 (25 May 2007, BOE 26 May) set generous feed-in tariffs for renewables under the 'special regime', triggering Spain's solar PV investment boom in 2007-2008.",
@@ -32,6 +33,7 @@
     },
     {
       "date": "2008-09-26",
+      "title": "New PV tariffs cut ~30%",
       "label": "RD 1578/2008",
       "category": "cut",
       "detail": "Royal Decree 1578/2008 (26 Sept 2008) cut feed-in tariffs roughly 30% for new PV plants registered after 29 Sept 2008 and capped annual new capacity, beginning the containment of the solar sector.",
@@ -39,6 +41,7 @@
     },
     {
       "date": "2010-11-19",
+      "title": "PV tariffs cut up to 45%, lifetime capped",
       "label": "RD 1565/2010",
       "category": "cut",
       "detail": "Royal Decree 1565/2010 (19 Nov 2010) cut PV feed-in tariffs for installations under RD 1578/2008 (up to 45% for ground-mounted) and limited the tariff-eligible lifetime to 25 years.",
@@ -46,6 +49,7 @@
     },
     {
       "date": "2010-12-23",
+      "title": "Output caps imposed on existing PV plants",
       "label": "RDL 14/2010",
       "category": "cut",
       "detail": "Royal Decree-Law 14/2010 (23 Dec 2010) introduced 'equivalent operating hours' caps on subsidised PV output and other measures to correct the tariff deficit, reducing remuneration for existing plants.",
@@ -53,6 +57,7 @@
     },
     {
       "date": "2012-01-27",
+      "title": "Moratorium on new renewable registrations",
       "label": "RDL 1/2012",
       "category": "cut",
       "detail": "Royal Decree-Law 1/2012 (27 Jan 2012) imposed a moratorium suspending the pre-allocation registry and removing economic incentives for new renewable installations, effectively halting new PV registrations.",
@@ -60,6 +65,7 @@
     },
     {
       "date": "2012-12-27",
+      "title": "7% electricity generation tax introduced",
       "label": "Law 15/2012",
       "category": "cut",
       "detail": "Law 15/2012 (27 Dec 2012) on fiscal measures for energy sustainability created a 7% tax on the value of all electricity generation (in force 1 Jan 2013), cutting net returns for renewable producers.",
@@ -67,6 +73,7 @@
     },
     {
       "date": "2013-07-12",
+      "title": "Feed-in tariff regime abolished entirely",
       "label": "RDL 9/2013",
       "category": "cut",
       "detail": "Royal Decree-Law 9/2013 (12 July 2013, BOE 13 July) abolished the feed-in tariff/'special regime' remuneration, replacing it for all plants with a new 'reasonable return' specific remuneration scheme.",
@@ -74,6 +81,7 @@
     },
     {
       "date": "2013-12-26",
+      "title": "New Electricity Sector Law entrenches reform",
       "label": "Law 24/2013",
       "category": "cut",
       "detail": "Law 24/2013 (26 Dec 2013), the new Electricity Sector Law, consolidated the reform, entrenching the 'reasonable return' model and ending the prior special-regime support framework for renewables.",
@@ -81,6 +89,7 @@
     },
     {
       "date": "2014-06-06",
+      "title": "Retroactive 'reasonable return' regime applied",
       "label": "RD 413/2014",
       "category": "cut",
       "detail": "Royal Decree 413/2014 (6 June 2014) implemented the new 'specific remuneration' regime based on a 'reasonable rate of return', applied retroactively to existing plants and triggering ECT arbitration claims.",
@@ -88,34 +97,39 @@
     },
     {
       "date": "2018-03-06",
-      "label": "Achmea (CJEU)",
+      "title": "Intra-EU BIT arbitration declared incompatible with EU law",
+      "label": "Achmea (CJEU, C-284/16)",
       "category": "eu_law",
       "detail": "In Case C-284/16 (Achmea, 6 March 2018) the CJEU held that arbitration clauses in intra-EU bilateral investment treaties are incompatible with EU law, undermining intra-EU investor-state arbitration.",
       "source": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:62016CJ0284"
     },
     {
       "date": "2021-09-02",
-      "label": "Komstroy (CJEU)",
+      "title": "Intra-EU ECT arbitration declared incompatible with EU law",
+      "label": "Komstroy (CJEU, C-741/19)",
       "category": "eu_law",
       "detail": "In Case C-741/19 (Moldova v Komstroy, 2 Sept 2021) the CJEU extended Achmea to the Energy Charter Treaty, ruling that intra-EU ECT arbitration is incompatible with EU law.",
       "source": "https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=CELEX:62019CJ0741"
     },
     {
       "date": "2025-03-24",
-      "label": "EC Antin state aid",
+      "title": "EC rules paying ECT awards to EU investors is illegal state aid",
+      "label": "Commission Decision (EU) 2025/1235 — Antin",
       "category": "eu_law",
       "detail": "Commission Decision (EU) 2025/1235 (24 March 2025) found the ICSID arbitration award ordering Spain to pay Antin (~EUR 101m) to be illegal and incompatible State aid, barring its payment or enforcement.",
       "source": "https://eur-lex.europa.eu/eli/dec/2025/1235/oj/eng"
     },
     {
       "date": "2024-04-16",
-      "label": "Spain ECT exit notice",
+      "title": "Spain announces withdrawal from the ECT",
+      "label": "Spain ECT withdrawal notice",
       "category": "ect",
       "detail": "Spain confirmed its intention to withdraw from the Energy Charter Treaty (announced April 2024; formal notice to the depositary given 27 June 2024), part of a coordinated EU exit. (Exact announcement date may vary slightly by source.)",
       "source": "https://www.business-humanrights.org/en/latest-news/spain-confirms-intention-to-withdraw-from-energy-charter-treaty/"
     },
     {
       "date": "2025-06-28",
+      "title": "Spain's ECT exit takes effect (20-yr sunset applies)",
       "label": "Spain leaves ECT",
       "category": "ect",
       "detail": "Spain's withdrawal from the Energy Charter Treaty took effect on 28 June 2025, one year after its notice to the depositary, though the ECT's 20-year sunset clause keeps existing investments protected.",
