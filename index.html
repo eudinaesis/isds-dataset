@@ -1808,6 +1808,9 @@ let alluvialEventYears = [];
 let alluvialPosMap = {};
 let alluvialEventPositions = [];   // [{ev, x}] — populated during render
 let alluvialRibbonTop = 0, alluvialRibbonBottom = 0;
+let alluvialLeft = 42;             // left margin (GW axis); used in hit-test too
+let alluvialPvCapMap = null;       // {year: gw} for PV hit-testing
+let pvHovered = false;
 
 function extractDecisionYear(decisions, status) {
   if (!decisions || status === 'Pending') return null;
@@ -1911,7 +1914,7 @@ function renderAlluvial() {
   alluvialRibbonBottom = RIBBON_BOTTOM;
   const ribbonAreaH = RIBBON_BOTTOM - RIBBON_TOP;
 
-  const LEFT = 8, RIGHT_LABEL = 160;
+  const LEFT = alluvialLeft; const RIGHT_LABEL = 160;
   const chartW = cW - LEFT - RIGHT_LABEL;
   const ribbonH = 7, gap = 1;
 
@@ -1921,12 +1924,31 @@ function renderAlluvial() {
   ctx.fillStyle = '#f9fafb';
   ctx.fillRect(0, 0, cW, cH);
 
+  // --- GW axis (left side) ---
+  ctx.setLineDash([]);
+  ctx.textAlign = 'right';
+  ctx.font = '9px system-ui,sans-serif';
+  ctx.fillStyle = '#aaa';
+  for (let gw = 0; gw <= 30; gw += 5) {
+    const ay = Math.round(RIBBON_BOTTOM - (gw / 35) * ribbonAreaH);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(LEFT, ay); ctx.lineTo(LEFT + chartW, ay); ctx.stroke();
+    ctx.strokeStyle = '#ccc';
+    ctx.beginPath(); ctx.moveTo(LEFT - 4, ay); ctx.lineTo(LEFT, ay); ctx.stroke();
+    ctx.fillText(gw === 0 ? '0 GW' : String(gw), LEFT - 6, ay + 3);
+  }
+  ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(LEFT, RIBBON_TOP); ctx.lineTo(LEFT, RIBBON_BOTTOM); ctx.stroke();
+  ctx.textAlign = 'left';
+
   // --- PV capacity overlay (drawn first, behind ribbons) ---
   if (timelineData) {
     const pvMax = 35; // GW — 32 GW reaches ~91% of ribbonAreaH
     const capMap = {};
     for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
 
+    alluvialPvCapMap = capMap;
     // Filled area from RIBBON_BOTTOM upward (stays behind ribbons)
     ctx.beginPath();
     ctx.moveTo(xOf(ALLUVIAL_YEAR_START), RIBBON_BOTTOM);
@@ -2003,39 +2025,36 @@ function renderAlluvial() {
   }
 
   // --- PV line (drawn in front of ribbons) ---
-  if (timelineData) {
+  if (alluvialPvCapMap) {
     const pvMax = 35;
-    const capMap = {};
-    for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
     const pvPath = () => {
       let first = true;
       ctx.beginPath();
       for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
-        const gw = capMap[yr]; if (gw == null) { first = true; continue; }
+        const gw = alluvialPvCapMap[yr]; if (gw == null) { first = true; continue; }
         const x = xOf(yr), y = RIBBON_BOTTOM - (gw / pvMax) * ribbonAreaH;
         if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
       }
     };
-    // Yellow border pass
-    pvPath();
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 4;
     ctx.setLineDash([]);
-    ctx.stroke();
-    // Black line on top
-    pvPath();
-    ctx.strokeStyle = '#111';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    if (pvHovered) {
+      // Glow pass behind
+      pvPath(); ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 12; ctx.globalAlpha = 0.55; ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    // 5px black base
+    pvPath(); ctx.strokeStyle = '#000'; ctx.lineWidth = 5; ctx.stroke();
+    // 2.5px yellow on top
+    pvPath(); ctx.strokeStyle = pvHovered ? '#fbbf24' : '#f59e0b'; ctx.lineWidth = 2.5; ctx.stroke();
     // Label
-    const gw24 = capMap[2024];
+    const gw24 = alluvialPvCapMap[2024];
     if (gw24) {
       const ly = RIBBON_BOTTOM - (gw24 / pvMax) * ribbonAreaH;
-      ctx.font = 'bold 10px system-ui,sans-serif';
+      ctx.font = `${pvHovered ? 'bold ' : ''}10px system-ui,sans-serif`;
       ctx.textAlign = 'left';
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 4;
-      ctx.fillStyle = '#111';
+      ctx.shadowColor = pvHovered ? '#fbbf24' : '#f59e0b';
+      ctx.shadowBlur = pvHovered ? 8 : 3;
+      ctx.fillStyle = '#000';
       ctx.fillText('Solar PV (GW)', xOf(2024) + 4, ly - 5);
       ctx.shadowBlur = 0;
     }
@@ -2100,9 +2119,8 @@ document.addEventListener("keydown", e => {
   function getRibbonHit(canvas, mx, my) {
     if (!alluvialCases?.length || !alluvialEventYears.length) return null;
     const cW = canvas.offsetWidth;
-    const LEFT = 8, RIGHT_LABEL = 160;
-    const chartW = cW - LEFT - RIGHT_LABEL;
-    const yr = ALLUVIAL_YEAR_START + (mx - LEFT) / chartW * (ALLUVIAL_YEAR_END - ALLUVIAL_YEAR_START);
+    const chartW = cW - alluvialLeft - 160;
+    const yr = ALLUVIAL_YEAR_START + (mx - alluvialLeft) / chartW * (ALLUVIAL_YEAR_END - ALLUVIAL_YEAR_START);
     const nearYr = alluvialEventYears.reduce((b, y) => Math.abs(y - yr) < Math.abs(b - yr) ? y : b);
     const { pos } = alluvialPosMap[nearYr] ?? {};
     if (!pos) return null;
@@ -2114,6 +2132,21 @@ document.addEventListener("keydown", e => {
     return null;
   }
 
+  function isNearPvLine(canvas, mx, my) {
+    if (!alluvialPvCapMap) return false;
+    const cW = canvas.offsetWidth;
+    const chartW = cW - alluvialLeft - 160;
+    const yr = ALLUVIAL_YEAR_START + (mx - alluvialLeft) / chartW * (ALLUVIAL_YEAR_END - ALLUVIAL_YEAR_START);
+    if (yr < ALLUVIAL_YEAR_START || yr > 2024) return false;
+    const floorYr = Math.floor(yr), ceilYr = Math.ceil(yr);
+    const g0 = alluvialPvCapMap[floorYr], g1 = alluvialPvCapMap[ceilYr];
+    if (g0 == null && g1 == null) return false;
+    const gw = (g0 != null && g1 != null) ? g0 + (g1 - g0) * (yr - floorYr) : (g0 ?? g1);
+    const ribbonAreaH = alluvialRibbonBottom - alluvialRibbonTop;
+    const pvY = alluvialRibbonBottom - (gw / 35) * ribbonAreaH;
+    return Math.abs(my - pvY) <= 6;
+  }
+
   document.addEventListener("mousemove", e => {
     const canvas = document.getElementById("chart-alluvial");
     if (!canvas) return;
@@ -2121,8 +2154,23 @@ document.addEventListener("keydown", e => {
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
     if (mx < 0 || mx > canvas.offsetWidth || my < 0 || my > canvas.offsetHeight) {
       if (tip) tip.style.display = "none";
+      if (pvHovered) { pvHovered = false; renderAlluvial(); }
       return;
     }
+
+    // Priority: PV line → event markers → ribbons
+    if (isNearPvLine(canvas, mx, my)) {
+      canvas.style.cursor = "crosshair";
+      if (!pvHovered) { pvHovered = true; renderAlluvial(); }
+      if (tip) {
+        tip.style.display = "block";
+        tip.style.left = (e.clientX + 14) + "px";
+        tip.style.top = (e.clientY - 30) + "px";
+        tip.textContent = "Total installed solar PV electric capacity, GW";
+      }
+      return;
+    }
+    if (pvHovered) { pvHovered = false; renderAlluvial(); }
 
     const evHit = getEventHit(canvas, mx, my);
     if (evHit) {
@@ -2156,6 +2204,15 @@ document.addEventListener("keydown", e => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
 
+    if (isNearPvLine(canvas, mx, my)) {
+      if (tip) {
+        tip.style.display = "block";
+        tip.style.left = (e.clientX + 14) + "px";
+        tip.style.top = (e.clientY - 30) + "px";
+        tip.textContent = "Total installed solar PV electric capacity, GW";
+      }
+      return;
+    }
     const evHit = getEventHit(canvas, mx, my);
     if (evHit) { if (tip) tip.style.display = "none"; openEventModal(evHit); return; }
 
