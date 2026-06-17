@@ -436,6 +436,13 @@
   }
   .chart-wrap { position: relative; height: 280px; }
   .chart-wrap-tall { position: relative; height: 340px; }
+  .chart-wrap-wide { position: relative; height: 380px; }
+  .chart-wrap-gantt { position: relative; height: 440px; }
+  .spain-card-wide { grid-column: 1 / -1; }
+  .spain-card h3 .card-sub { text-transform: none; letter-spacing: 0; color: #999; font-weight: 400; }
+  .timeline-event-legend { display: flex; gap: 16px; margin-bottom: 10px; font-size: 11px; color: #555; flex-wrap: wrap; }
+  .timeline-event-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-swatch { display: inline-block; width: 16px; height: 2px; }
 
   #guide-view { display: none; flex: 1; overflow-y: auto; background: #f5f5f5; }
   #guide-view.visible { display: block; }
@@ -683,6 +690,7 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.1/dist/chartjs-chart-sankey.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
 <body>
@@ -749,10 +757,26 @@
       </div>
     </div>
     <div class="spain-grid">
+      <div class="spain-card spain-card-wide"><h3>Spain ECT Case Lifecycle <span class="card-sub">— all 56 Spain cases: filing → outcome → enforcement</span></h3><div class="chart-wrap-wide"><canvas id="chart-lifecycle"></canvas></div></div>
       <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
       <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
       <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
       <div class="spain-card"><h3>Compensation Claimed vs. Awarded (USD millions)</h3><div class="chart-wrap"><canvas id="chart-amounts"></canvas></div></div>
+      <div class="spain-card spain-card-wide">
+        <h3>Solar PV Build-out, Filings &amp; Policy Timeline <span class="card-sub">— Spain 2005–2025</span></h3>
+        <div class="timeline-event-legend">
+          <span><span class="legend-swatch" style="background:#10b981"></span>Incentive (feed-in tariff)</span>
+          <span><span class="legend-swatch" style="background:#ef4444"></span>Subsidy cut / moratorium</span>
+          <span><span class="legend-swatch" style="background:#8b5cf6"></span>EU court ruling</span>
+          <span><span class="legend-swatch" style="background:#f59e0b"></span>ECT event</span>
+          <span style="color:#aaa;font-style:italic">— dashed vertical lines</span>
+        </div>
+        <div class="chart-wrap-wide"><canvas id="chart-timeline"></canvas></div>
+      </div>
+      <div class="spain-card spain-card-wide">
+        <h3>Enforcement Proceedings Timeline <span class="card-sub">— Spain ECT cases with court activity (hover for detail)</span></h3>
+        <div class="chart-wrap-gantt"><canvas id="chart-gantt"></canvas></div>
+      </div>
     </div>
   </div>
 
@@ -1235,6 +1259,7 @@ document.addEventListener("keydown", e => {
 
 let vizRows = [], vizLabel = "", vizActivePreset = "browse";
 const vizCharts = {};
+let timelineData = null;
 
 function destroyVizCharts() {
   for (const c of Object.values(vizCharts)) { try { c.destroy(); } catch (_) {} }
@@ -1295,6 +1320,87 @@ function renderViz() {
   renderHomeStates(agg.homeStates);
   renderByYear(agg.byYear);
   renderAmounts(agg.amounts);
+  renderLifecycle();
+  renderTimeline();
+  renderGantt();
+}
+
+const LIFECYCLE_COLORS = {
+  all: "#1a3a5c",
+  investor: "#10b981", state: "#ef4444", pending: "#8b5cf6", discontinued: "#9ca3af",
+  enforced: "#3b82f6", not_paid: "#f59e0b", paid: "#059669", blocked: "#dc2626",
+};
+
+function buildLifecycleData() {
+  const rows = dbAll(
+    `SELECT c.status, rn.enforcement_status
+       FROM cases c LEFT JOIN research_notes rn ON c.no = rn.case_no
+      WHERE c.respondent_state LIKE '%Spain%'`
+  );
+  const n = { all: rows.length, investor: 0, state: 0, pending: 0, discontinued: 0,
+              enforced: 0, not_paid: 0, paid: 0, blocked: 0 };
+  const OUTCOME = {
+    "Decided in favour of investor": "investor", "Decided in favour of State": "state",
+    "Pending": "pending", "Discontinued for unknown reasons": "discontinued",
+  };
+  for (const r of rows) {
+    const o = OUTCOME[r.status] || "pending";
+    n[o]++;
+    if (o === "investor" && n.hasOwnProperty(r.enforcement_status)) n[r.enforcement_status]++;
+  }
+  return n;
+}
+
+function renderLifecycle() {
+  const canvas = document.getElementById("chart-lifecycle");
+  if (!canvas) return;
+  let sankeyReady = false;
+  try { sankeyReady = !!Chart.registry.getController("sankey"); } catch (_) { sankeyReady = false; }
+  if (!sankeyReady) { canvas.closest(".spain-card").style.display = "none"; return; }
+  const n = buildLifecycleData();
+  const lbl = {
+    all: `All Spain cases (${n.all})`,
+    investor: `Investor wins (${n.investor})`, state: `State prevailed (${n.state})`,
+    pending: `Pending (${n.pending})`, discontinued: `Discontinued (${n.discontinued})`,
+    enforced: `Enforced, unpaid (${n.enforced})`, not_paid: `Won, unpaid (${n.not_paid})`,
+    paid: `Paid (${n.paid})`, blocked: `Blocked / set aside (${n.blocked})`,
+  };
+  const flows = [
+    { from: "all", to: "investor", flow: n.investor },
+    { from: "all", to: "state", flow: n.state },
+    { from: "all", to: "pending", flow: n.pending },
+    { from: "all", to: "discontinued", flow: n.discontinued },
+    { from: "investor", to: "enforced", flow: n.enforced },
+    { from: "investor", to: "not_paid", flow: n.not_paid },
+    { from: "investor", to: "paid", flow: n.paid },
+    { from: "investor", to: "blocked", flow: n.blocked },
+  ].filter(f => f.flow > 0);
+
+  vizCharts.lifecycle = new Chart(canvas, {
+    type: "sankey",
+    data: {
+      datasets: [{
+        data: flows,
+        labels: lbl,
+        colorFrom: c => LIFECYCLE_COLORS[c.dataset.data[c.dataIndex].from] ?? "#aaa",
+        colorTo: c => LIFECYCLE_COLORS[c.dataset.data[c.dataIndex].to] ?? "#aaa",
+        colorMode: "gradient",
+        column: { all: 0, investor: 1, state: 1, pending: 1, discontinued: 1,
+                  enforced: 2, not_paid: 2, paid: 2, blocked: 2 },
+        size: "max",
+        borderWidth: 0,
+        nodeWidth: 14,
+        font: { size: 12 },
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.flow} case${ctx.raw.flow === 1 ? "" : "s"}` } },
+      },
+    },
+  });
 }
 
 function loadVizPreset(preset) {
@@ -1439,6 +1545,226 @@ function renderAmounts(amounts) {
       scales: {
         x: { beginAtZero: true, title: { display: true, text: "Claimed (USD M)", font: { size: 11 } } },
         y: { beginAtZero: true, max: yMax, title: { display: true, text: "Awarded (USD M)", font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+// --- Timeline & Gantt charts ---
+
+const EVENT_COLORS = { incentive: "#10b981", cut: "#ef4444", eu_law: "#8b5cf6", ect: "#f59e0b" };
+
+Chart.register({
+  id: "timelineEvents",
+  afterDraw(chart, _args, opts) {
+    if (!opts || !opts.events || !opts.events.length) return;
+    const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+    for (const ev of opts.events) {
+      let px;
+      try { px = x.getPixelForValue(ev.xLabel); } catch (_) { continue; }
+      if (px == null || isNaN(px) || px < x.left - 1 || px > x.right + 1) continue;
+      ctx.save();
+      ctx.strokeStyle = ev.color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      ctx.moveTo(px, top);
+      ctx.lineTo(px, bottom);
+      ctx.stroke();
+      ctx.restore();
+    }
+  },
+});
+
+function renderTimeline() {
+  const canvas = document.getElementById("chart-timeline");
+  if (!canvas) return;
+  if (!timelineData) { canvas.closest(".spain-card").style.display = "none"; return; }
+
+  const ALL_YEARS = Array.from({ length: 22 }, (_, i) => String(2005 + i));
+
+  const filedMap = {};
+  for (const r of dbAll("SELECT year FROM cases WHERE respondent_state LIKE '%Spain%'"))
+    if (r.year) filedMap[String(r.year)] = (filedMap[String(r.year)] || 0) + 1;
+
+  const capMap = {};
+  for (const c of timelineData.capacity) capMap[String(c.year)] = +(c.solar_pv_mw / 1000).toFixed(2);
+
+  const evtByYear = {};
+  for (const ev of timelineData.events) {
+    const yr = String(parseInt(ev.date.slice(0, 4)));
+    if (!evtByYear[yr]) evtByYear[yr] = { color: EVENT_COLORS[ev.category] ?? "#aaa", labels: [] };
+    evtByYear[yr].labels.push(ev.label);
+  }
+  const pluginEvents = Object.entries(evtByYear).map(([yr, v]) => ({ xLabel: yr, color: v.color }));
+
+  vizCharts.timeline = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: ALL_YEARS,
+      datasets: [
+        {
+          type: "line",
+          label: "Solar PV installed (GW)",
+          data: ALL_YEARS.map(y => capMap[y] ?? null),
+          borderColor: "#f59e0b",
+          backgroundColor: "rgba(245,158,11,0.08)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2,
+          yAxisID: "y1",
+          spanGaps: false,
+          order: 1,
+        },
+        {
+          type: "bar",
+          label: "Cases filed",
+          data: ALL_YEARS.map(y => filedMap[y] ?? 0),
+          backgroundColor: "rgba(26,58,92,0.75)",
+          yAxisID: "y0",
+          order: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 12 } },
+        tooltip: {
+          callbacks: {
+            afterBody(items) {
+              const yr = items[0]?.label;
+              return evtByYear[yr] ? evtByYear[yr].labels.map(l => `  • ${l}`) : [];
+            },
+          },
+        },
+        timelineEvents: { events: pluginEvents },
+      },
+      scales: {
+        x: { ticks: { font: { size: 11 } } },
+        y0: {
+          type: "linear", position: "left", beginAtZero: true,
+          title: { display: true, text: "Cases filed", font: { size: 11 } },
+          ticks: { stepSize: 5 },
+          max: 25,
+        },
+        y1: {
+          type: "linear", position: "right", beginAtZero: true,
+          title: { display: true, text: "PV installed (GW)", font: { size: 11 } },
+          grid: { drawOnChartArea: false },
+          ticks: { callback: v => v + " GW" },
+        },
+      },
+    },
+  });
+}
+
+const RESULT_COLORS_GANTT = {
+  enforced: "#3b82f6", set_aside: "#ef4444", annulled: "#f59e0b",
+  pending: "#8b5cf6", appeal_pending: "#f97316", blocked: "#dc2626", dismissed: "#9ca3af",
+};
+const RESULT_LABELS_GANTT = {
+  enforced: "Enforced", set_aside: "Set aside", annulled: "Annulled",
+  pending: "Pending", appeal_pending: "Appeal pending", blocked: "Blocked", dismissed: "Dismissed",
+};
+const MONTH_ABBR = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+
+function parseEnfDate(dateText) {
+  if (!dateText) return null;
+  const d = dateText.trim().toLowerCase();
+  const m2 = d.match(/^([a-z]+)\s+(\d{4})$/);
+  if (m2) {
+    const month = MONTH_ABBR[m2[1]] ?? 6;
+    return parseInt(m2[2]) + (month - 0.5) / 12;
+  }
+  const m1 = d.match(/^(\d{4})$/);
+  if (m1) return parseInt(m1[1]) + 0.5;
+  return null;
+}
+
+function renderGantt() {
+  const canvas = document.getElementById("chart-gantt");
+  if (!canvas) return;
+
+  const rows = dbAll(`
+    SELECT ep.case_no, c.short_name, ep.forum, ep.result, ep.date_text
+    FROM enforcement_proceedings ep JOIN cases c ON ep.case_no = c.no
+    ORDER BY ep.case_no, ep.id
+  `);
+  if (!rows.length) { canvas.closest(".spain-card").style.display = "none"; return; }
+
+  const caseOrder = [], caseSeen = {};
+  for (const r of rows)
+    if (!caseSeen[r.case_no]) { caseSeen[r.case_no] = true; caseOrder.push({ case_no: r.case_no, short_name: r.short_name }); }
+  const caseIdx = {};
+  caseOrder.forEach((c, i) => { caseIdx[c.case_no] = i; });
+
+  const groups = {};
+  for (const r of rows) {
+    const x = parseEnfDate(r.date_text);
+    if (x === null) continue;
+    if (!groups[r.result]) groups[r.result] = [];
+    groups[r.result].push({ x, y: caseIdx[r.case_no], forum: r.forum, date: r.date_text, name: r.short_name });
+  }
+
+  const shortName = n =>
+    n.replace(" and Energía Solar", "").replace("Infrastructure Services and Energia Termosolar (formerly Antin)", "Antin / Infra Services").replace(" v. Spain", "").replace(" and others", " et al.");
+  const yLabels = caseOrder.map(c => shortName(c.short_name));
+
+  const datasets = Object.entries(groups).map(([result, pts]) => ({
+    label: RESULT_LABELS_GANTT[result] ?? result,
+    data: pts,
+    backgroundColor: RESULT_COLORS_GANTT[result] ?? "#aaa",
+    pointRadius: 10,
+    pointHoverRadius: 13,
+    parsing: false,
+  }));
+
+  vizCharts.gantt = new Chart(canvas, {
+    type: "scatter",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const d = ctx.raw;
+              return ` ${d.name} — ${d.forum} (${d.date}) → ${ctx.dataset.label}`;
+            },
+          },
+          filter: item => !!item.raw.name,
+        },
+      },
+      scales: {
+        x: {
+          type: "linear", min: 1998, max: 2027,
+          title: { display: true, text: "Year", font: { size: 11 } },
+          ticks: {
+            stepSize: 1,
+            callback: v => {
+              if (!Number.isInteger(v)) return "";
+              if (v === 2000 || (v >= 2020 && v % 2 === 0) || v === 2025 || v === 2026) return String(v);
+              return "";
+            },
+          },
+        },
+        y: {
+          type: "linear",
+          min: -0.5,
+          max: caseOrder.length - 0.5,
+          reverse: true,
+          ticks: {
+            stepSize: 1,
+            callback: v => yLabels[v] ?? "",
+            font: { size: 10 },
+          },
+          grid: { color: "rgba(0,0,0,0.05)" },
+        },
       },
     },
   });
@@ -1611,11 +1937,13 @@ document.getElementById("q").addEventListener("keydown", e => {
 // --- Init ---
 
 (async () => {
-  const SQL = await initSqlJs({
-    locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-  });
-  const buf = await fetch("isds.db").then(r => r.arrayBuffer());
+  const [SQL, buf, td] = await Promise.all([
+    initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` }),
+    fetch("isds.db").then(r => r.arrayBuffer()),
+    fetch("timeline_data.json").then(r => r.json()).catch(() => null),
+  ]);
   db = new SQL.Database(new Uint8Array(buf));
+  timelineData = td;
   document.getElementById("loading-overlay").remove();
   state.filters.respondent_state = "Spain";
   loadFacets();

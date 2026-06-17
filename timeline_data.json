@@ -1,0 +1,125 @@
+{
+  "capacity": [
+    { "year": 2006, "solar_pv_mw": 125 },
+    { "year": 2007, "solar_pv_mw": 637 },
+    { "year": 2008, "solar_pv_mw": 3355 },
+    { "year": 2009, "solar_pv_mw": 3399 },
+    { "year": 2010, "solar_pv_mw": 3840 },
+    { "year": 2011, "solar_pv_mw": 4261 },
+    { "year": 2012, "solar_pv_mw": 4561 },
+    { "year": 2013, "solar_pv_mw": 4639 },
+    { "year": 2014, "solar_pv_mw": 4646 },
+    { "year": 2015, "solar_pv_mw": 4656 },
+    { "year": 2016, "solar_pv_mw": 4669 },
+    { "year": 2017, "solar_pv_mw": 4688 },
+    { "year": 2018, "solar_pv_mw": 4707 },
+    { "year": 2019, "solar_pv_mw": 8711 },
+    { "year": 2020, "solar_pv_mw": 11669 },
+    { "year": 2021, "solar_pv_mw": 15286 },
+    { "year": 2022, "solar_pv_mw": 18164 },
+    { "year": 2023, "solar_pv_mw": 25549 },
+    { "year": 2024, "solar_pv_mw": 32043 }
+  ],
+  "capacity_source": "Year-end cumulative grid-connected solar PV capacity for Spain, compiled from Red Electrica de Espana (REE) data as tabulated in the Wikipedia 'Solar power in Spain' article (https://en.wikipedia.org/wiki/Solar_power_in_Spain), with 2023 (25,549 MW) and 2024 (32,043 MW) figures from REE press reporting (https://www.ree.es/en/press-office/press-release/news/press-release/2025/02/solar-pv-takes-lead-spains-installed-power-capacity). The 2024 value is REE's figure as of 31 Jan 2025, used here as year-end 2024.",
+  "capacity_note": "Values are year-end CUMULATIVE installed solar photovoltaic capacity in MW. They are PV-only and EXCLUDE concentrated solar power (CSP/solar thermal). The series reflects REE grid-connected capacity in the Spanish peninsular/national electricity system, so it counts grid-connected installations and may under-count distributed self-consumption capacity (industry body UNEF reports higher totals, e.g. ~32.5 GW for 2023 and ~40 GW for 2024, because it includes self-consumption). The series clearly shows the 2008 boom (637 MW at end-2007 to 3,355 MW at end-2008 under RD 661/2007), the 2009-2018 near-freeze, and the post-2018 resurgence. Caveat: no clean year-end PV-only figures were found for 2004-2005, so the series begins at 2006; the exact 2007/2008 cutoff can vary slightly by source (some report ~690 MW end-2007 / ~3,463 MW end-2008).",
+  "events": [
+    {
+      "date": "2007-05-25",
+      "label": "RD 661/2007",
+      "category": "incentive",
+      "detail": "Royal Decree 661/2007 (25 May 2007, BOE 26 May) set generous feed-in tariffs for renewables under the 'special regime', triggering Spain's solar PV investment boom in 2007-2008.",
+      "source": "https://www.global-regulation.com/translation/spain/1445573/royal-decree-661-2007,-of-may-25,-which-regulates-the-activity-of-production-of-electrical-energy-in-special-regime.html"
+    },
+    {
+      "date": "2008-09-26",
+      "label": "RD 1578/2008",
+      "category": "cut",
+      "detail": "Royal Decree 1578/2008 (26 Sept 2008) cut feed-in tariffs roughly 30% for new PV plants registered after 29 Sept 2008 and capped annual new capacity, beginning the containment of the solar sector.",
+      "source": "https://www.global-regulation.com/translation/spain/1444263/royal-decree-1578---2008-of-26-september,-remuneration-of-the-activity-of-production-of-electrical-energy-through-photovoltaic-solar-technology-for-.html"
+    },
+    {
+      "date": "2010-11-19",
+      "label": "RD 1565/2010",
+      "category": "cut",
+      "detail": "Royal Decree 1565/2010 (19 Nov 2010) cut PV feed-in tariffs for installations under RD 1578/2008 (up to 45% for ground-mounted) and limited the tariff-eligible lifetime to 25 years.",
+      "source": "https://www.iea.org/policies/5013-new-tariff-regulation-for-the-production-of-photovoltaic-electrical-energy-royal-decree-15652010"
+    },
+    {
+      "date": "2010-12-23",
+      "label": "RDL 14/2010",
+      "category": "cut",
+      "detail": "Royal Decree-Law 14/2010 (23 Dec 2010) introduced 'equivalent operating hours' caps on subsidised PV output and other measures to correct the tariff deficit, reducing remuneration for existing plants.",
+      "source": "https://www.mmmm.es/en/news-lawyers/news/photovoltaic-energy-publication-of-the-royal-decree-law-14-2010/"
+    },
+    {
+      "date": "2012-01-27",
+      "label": "RDL 1/2012",
+      "category": "cut",
+      "detail": "Royal Decree-Law 1/2012 (27 Jan 2012) imposed a moratorium suspending the pre-allocation registry and removing economic incentives for new renewable installations, effectively halting new PV registrations.",
+      "source": "https://www.renewableenergyworld.com/2012/04/03/spain-imposes-temporary-halt-to-new-renewable-energy-co-generation-projects/"
+    },
+    {
+      "date": "2012-12-27",
+      "label": "Law 15/2012",
+      "category": "cut",
+      "detail": "Law 15/2012 (27 Dec 2012) on fiscal measures for energy sustainability created a 7% tax on the value of all electricity generation (in force 1 Jan 2013), cutting net returns for renewable producers.",
+      "source": "https://www.iea.org/policies/5343-royal-decree-law-152012-on-tax-policy-aimed-at-energy-sustainability"
+    },
+    {
+      "date": "2013-07-12",
+      "label": "RDL 9/2013",
+      "category": "cut",
+      "detail": "Royal Decree-Law 9/2013 (12 July 2013, BOE 13 July) abolished the feed-in tariff/'special regime' remuneration, replacing it for all plants with a new 'reasonable return' specific remuneration scheme.",
+      "source": "https://www.enerdata.net/publications/daily-energy-news/spain-adopts-energy-reform-and-removes-renewable-feed-tariffs.html"
+    },
+    {
+      "date": "2013-12-26",
+      "label": "Law 24/2013",
+      "category": "cut",
+      "detail": "Law 24/2013 (26 Dec 2013), the new Electricity Sector Law, consolidated the reform, entrenching the 'reasonable return' model and ending the prior special-regime support framework for renewables.",
+      "source": "https://www.lexology.com/library/detail.aspx?g=7288a772-15b9-43c2-ba03-43b8c0a1d432"
+    },
+    {
+      "date": "2014-06-06",
+      "label": "RD 413/2014",
+      "category": "cut",
+      "detail": "Royal Decree 413/2014 (6 June 2014) implemented the new 'specific remuneration' regime based on a 'reasonable rate of return', applied retroactively to existing plants and triggering ECT arbitration claims.",
+      "source": "https://cms.law/en/esp/legal-updates/MAIN-AMENDMENTS-ESTABLISHED-BY-THE-ROYAL-DECREE-413-2014-DATED-6-JUNE-REGULATING-THE-PRODUCTION-OF-ELECTRICITY-FROM-RENEWABLE-ENERGY-SOURCES-COG"
+    },
+    {
+      "date": "2018-03-06",
+      "label": "Achmea (CJEU)",
+      "category": "eu_law",
+      "detail": "In Case C-284/16 (Achmea, 6 March 2018) the CJEU held that arbitration clauses in intra-EU bilateral investment treaties are incompatible with EU law, undermining intra-EU investor-state arbitration.",
+      "source": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:62016CJ0284"
+    },
+    {
+      "date": "2021-09-02",
+      "label": "Komstroy (CJEU)",
+      "category": "eu_law",
+      "detail": "In Case C-741/19 (Moldova v Komstroy, 2 Sept 2021) the CJEU extended Achmea to the Energy Charter Treaty, ruling that intra-EU ECT arbitration is incompatible with EU law.",
+      "source": "https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=CELEX:62019CJ0741"
+    },
+    {
+      "date": "2025-03-24",
+      "label": "EC Antin state aid",
+      "category": "eu_law",
+      "detail": "Commission Decision (EU) 2025/1235 (24 March 2025) found the ICSID arbitration award ordering Spain to pay Antin (~EUR 101m) to be illegal and incompatible State aid, barring its payment or enforcement.",
+      "source": "https://eur-lex.europa.eu/eli/dec/2025/1235/oj/eng"
+    },
+    {
+      "date": "2024-04-16",
+      "label": "Spain ECT exit notice",
+      "category": "ect",
+      "detail": "Spain confirmed its intention to withdraw from the Energy Charter Treaty (announced April 2024; formal notice to the depositary given 27 June 2024), part of a coordinated EU exit. (Exact announcement date may vary slightly by source.)",
+      "source": "https://www.business-humanrights.org/en/latest-news/spain-confirms-intention-to-withdraw-from-energy-charter-treaty/"
+    },
+    {
+      "date": "2025-06-28",
+      "label": "Spain leaves ECT",
+      "category": "ect",
+      "detail": "Spain's withdrawal from the Energy Charter Treaty took effect on 28 June 2025, one year after its notice to the depositary, though the ECT's 20-year sunset clause keeps existing investments protected.",
+      "source": "https://dailyjus.com/world/2025/12/spotlight-on-investment-arbitration-in-spain-after-the-withdrawal-of-the-energy-charter-treaty"
+    }
+  ]
+}

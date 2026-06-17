@@ -24,6 +24,8 @@ Must use a file server — `file://` is blocked by CORS on the DB fetch. `serve.
 - `seed_proceedings.py` — seeds `enforcement_proceedings` for Spain cases with court activity
 - `SPAIN_ANALYSIS.md` — 18-question statistical breakdown (rendered via doc-viewer modal)
 - `spain_cases_research.md` — case-by-case research notes (rendered via doc-viewer modal)
+- `timeline_data.json` — external reference data (Spain solar PV capacity by year + dated policy/EU-law/ECT events) for the master timeline chart; NOT in `isds.db`, fetched separately
+- `timeline-todo.md` — roadmap for the Spain-ECT-story timeline visualizations
 
 **DB regeneration pipeline:**
 ```bash
