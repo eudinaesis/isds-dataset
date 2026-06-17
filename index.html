@@ -1927,7 +1927,7 @@ function renderAlluvial() {
     const capMap = {};
     for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
 
-    // Filled area from RIBBON_BOTTOM upward
+    // Filled area from RIBBON_BOTTOM upward (stays behind ribbons)
     ctx.beginPath();
     ctx.moveTo(xOf(ALLUVIAL_YEAR_START), RIBBON_BOTTOM);
     for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
@@ -1938,29 +1938,6 @@ function renderAlluvial() {
     ctx.closePath();
     ctx.fillStyle = 'rgba(245,158,11,0.09)';
     ctx.fill();
-
-    // PV line
-    let first = true;
-    ctx.beginPath();
-    for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
-      const gw = capMap[yr]; if (gw == null) { first = true; continue; }
-      const x = xOf(yr), y = RIBBON_BOTTOM - (gw / pvMax) * ribbonAreaH;
-      if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = 'rgba(245,158,11,0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([]);
-    ctx.stroke();
-
-    // Label near the 2024 line end
-    const gw24 = capMap[2024];
-    if (gw24) {
-      const ly = RIBBON_BOTTOM - (gw24 / pvMax) * ribbonAreaH;
-      ctx.fillStyle = '#92400e';
-      ctx.font = '10px system-ui,sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('Solar PV (GW)', xOf(2024) + 4, ly - 4);
-    }
   }
 
   // --- Policy event markers (dashed verticals) ---
@@ -2022,6 +1999,45 @@ function renderAlluvial() {
       ctx.bezierCurveTo(cpx, p0.y + ribbonH, cpx, p0.y + ribbonH, x0, p0.y + ribbonH);
       ctx.closePath();
       ctx.fill();
+    }
+  }
+
+  // --- PV line (drawn in front of ribbons) ---
+  if (timelineData) {
+    const pvMax = 35;
+    const capMap = {};
+    for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
+    const pvPath = () => {
+      let first = true;
+      ctx.beginPath();
+      for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
+        const gw = capMap[yr]; if (gw == null) { first = true; continue; }
+        const x = xOf(yr), y = RIBBON_BOTTOM - (gw / pvMax) * ribbonAreaH;
+        if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+      }
+    };
+    // Yellow border pass
+    pvPath();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([]);
+    ctx.stroke();
+    // Black line on top
+    pvPath();
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Label
+    const gw24 = capMap[2024];
+    if (gw24) {
+      const ly = RIBBON_BOTTOM - (gw24 / pvMax) * ribbonAreaH;
+      ctx.font = 'bold 10px system-ui,sans-serif';
+      ctx.textAlign = 'left';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = '#111';
+      ctx.fillText('Solar PV (GW)', xOf(2024) + 4, ly - 5);
+      ctx.shadowBlur = 0;
     }
   }
 
