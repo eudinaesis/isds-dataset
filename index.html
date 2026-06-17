@@ -438,6 +438,7 @@
   .chart-wrap-tall { position: relative; height: 340px; }
   .chart-wrap-wide { position: relative; height: 380px; }
   .chart-wrap-gantt { position: relative; height: 440px; }
+  .chart-wrap-alluvial { position: relative; height: 600px; }
   .spain-card-wide { grid-column: 1 / -1; }
   .spain-card h3 .card-sub { text-transform: none; letter-spacing: 0; color: #999; font-weight: 400; }
   .timeline-event-legend { display: flex; gap: 16px; margin-bottom: 10px; font-size: 11px; color: #555; flex-wrap: wrap; }
@@ -758,17 +759,9 @@
     </div>
     <div class="spain-grid">
       <div class="spain-card spain-card-wide">
-        <h3>Solar PV Build-out, Filings &amp; Policy Timeline <span class="card-sub">— Spain 2005–2025</span></h3>
-        <div class="timeline-event-legend">
-          <span><span class="legend-swatch" style="background:#10b981"></span>Incentive (feed-in tariff)</span>
-          <span><span class="legend-swatch" style="background:#ef4444"></span>Subsidy cut / moratorium</span>
-          <span><span class="legend-swatch" style="background:#8b5cf6"></span>EU court ruling</span>
-          <span><span class="legend-swatch" style="background:#f59e0b"></span>ECT event</span>
-          <span style="color:#aaa;font-style:italic">— dashed vertical lines</span>
-        </div>
-        <div class="chart-wrap-wide"><canvas id="chart-timeline"></canvas></div>
+        <h3>Spain ECT Case Flow <span class="card-sub">— each ribbon is one case; hover to identify, click to open · dashed lines = policy/legal events</span></h3>
+        <div class="chart-wrap-alluvial"><canvas id="chart-alluvial" style="width:100%;height:100%;display:block"></canvas></div>
       </div>
-      <div class="spain-card spain-card-wide"><h3>Spain ECT Case Lifecycle <span class="card-sub">— all 56 Spain cases: filing → outcome → enforcement</span></h3><div class="chart-wrap-wide"><canvas id="chart-lifecycle"></canvas></div></div>
       <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
       <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
       <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
@@ -783,6 +776,8 @@
   <div id="guide-view">
     <div id="guide-body" class="md-body">Loading…</div>
   </div>
+
+  <div id="alluvial-tip" style="display:none;position:fixed;background:#1a3a5c;color:#fff;padding:5px 10px;border-radius:4px;font-size:11px;pointer-events:none;z-index:9999;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
 
   <div id="doc-modal" style="display:none">
     <div id="doc-modal-overlay" onclick="closeDocModal()"></div>
@@ -1320,8 +1315,7 @@ function renderViz() {
   renderHomeStates(agg.homeStates);
   renderByYear(agg.byYear);
   renderAmounts(agg.amounts);
-  renderLifecycle();
-  renderTimeline();
+  renderAlluvial();
   renderGantt();
 }
 
@@ -1779,6 +1773,302 @@ function renderGantt() {
     },
   });
 }
+
+// --- Alluvial flow chart ---
+
+const ALLUVIAL_YEAR_START = 2006;
+const ALLUVIAL_YEAR_END = 2026;
+const ALLUVIAL_STATE_ORDER = ['paid','enforced','not_paid','blocked','state_won','discontinued','pending'];
+const ALLUVIAL_COLORS = {
+  paid:'#059669', enforced:'#3b82f6', not_paid:'#f59e0b',
+  blocked:'#dc2626', state_won:'#ef4444', discontinued:'#9ca3af', pending:'#8b5cf6',
+};
+const ALLUVIAL_LABELS = {
+  paid:'Paid', enforced:'Enforced (unpaid)', not_paid:'Won — no enforcement yet',
+  blocked:'Blocked / set aside', state_won:'State prevailed',
+  discontinued:'Discontinued', pending:'Pending',
+};
+
+let alluvialCases = null;
+let alluvialEventYears = [];
+let alluvialPosMap = {};
+
+function extractDecisionYear(decisions, status) {
+  if (!decisions || status === 'Pending') return null;
+  let m = decisions.match(/(?:Final\s+)?Award\s+dated[^;]*?\b(20\d{2})\b/i);
+  if (m) return parseInt(m[1]);
+  m = decisions.match(/discontinuance[^;]*?\b(20\d{2})\b/i);
+  if (m) return parseInt(m[1]);
+  const all = [...decisions.matchAll(/\b(20\d{2})\b/g)].map(x => parseInt(x[1]));
+  return all.length ? Math.max(...all) : null;
+}
+
+function buildAlluvialCases() {
+  const rows = dbAll(`
+    SELECT c.no, c.short_name, c.year AS year_filed, c.status, c.decisions,
+           rn.enforcement_status
+    FROM cases c LEFT JOIN research_notes rn ON c.no = rn.case_no
+    WHERE c.respondent_state LIKE '%Spain%'
+    ORDER BY c.year, c.no
+  `);
+  const enfMap = {};
+  for (const r of dbAll("SELECT case_no, date_text FROM enforcement_proceedings ORDER BY id"))
+    if (!enfMap[r.case_no]) enfMap[r.case_no] = r.date_text;
+
+  return rows.map(r => {
+    const isMaffezini = r.no === 1318;
+    const yearFiled = isMaffezini ? ALLUVIAL_YEAR_START : (r.year_filed ?? ALLUVIAL_YEAR_START);
+    let yearDecided = isMaffezini ? ALLUVIAL_YEAR_START : extractDecisionYear(r.decisions, r.status);
+    // Fallback for decided/discontinued cases without parseable dates
+    if (yearDecided == null && r.status !== 'Pending') yearDecided = yearFiled + 3;
+    const enfRaw = enfMap[r.no];
+    const yearEnf = isMaffezini ? ALLUVIAL_YEAR_START
+                  : (enfRaw ? Math.floor(parseEnfDate(enfRaw)) : null);
+    return {
+      no: r.no, name: r.short_name,
+      yearFiled, yearDecided, yearEnf,
+      status: r.status,
+      enfStatus: r.enforcement_status || 'not_paid',
+    };
+  });
+}
+
+function getCaseStateAt(c, year) {
+  if (year < c.yearFiled) return null;
+  if (c.yearDecided != null && year >= c.yearDecided) {
+    const s = c.status;
+    if (s === 'Decided in favour of investor') {
+      if (c.yearEnf != null && year >= c.yearEnf) return c.enfStatus;
+      return 'not_paid';
+    }
+    if (s === 'Decided in favour of State') return 'state_won';
+    if (s === 'Discontinued for unknown reasons') return 'discontinued';
+    return 'pending';
+  }
+  return 'pending';
+}
+
+function computeAlluvialY(cases, year, ribbonH, gap, topY) {
+  const groups = {};
+  for (const k of ALLUVIAL_STATE_ORDER) groups[k] = [];
+  for (const c of cases) {
+    const state = getCaseStateAt(c, year);
+    if (state !== null) groups[state].push(c);
+  }
+  for (const g of Object.values(groups)) g.sort((a, b) => a.no - b.no);
+  const pos = {};
+  let y = topY;
+  for (const k of ALLUVIAL_STATE_ORDER) {
+    for (const c of groups[k]) { pos[c.no] = { y, state: k }; y += ribbonH + gap; }
+    if (groups[k].length) y += 3;
+  }
+  return { pos, groups };
+}
+
+function renderAlluvial() {
+  const canvas = document.getElementById("chart-alluvial");
+  if (!canvas) return;
+
+  if (!alluvialCases) alluvialCases = buildAlluvialCases();
+
+  const yearSet = new Set([ALLUVIAL_YEAR_START, ALLUVIAL_YEAR_END]);
+  for (const c of alluvialCases) {
+    yearSet.add(Math.max(c.yearFiled, ALLUVIAL_YEAR_START));
+    if (c.yearDecided) yearSet.add(Math.max(ALLUVIAL_YEAR_START, Math.min(c.yearDecided, ALLUVIAL_YEAR_END)));
+    if (c.yearEnf) yearSet.add(Math.max(ALLUVIAL_YEAR_START, Math.min(c.yearEnf, ALLUVIAL_YEAR_END)));
+  }
+  alluvialEventYears = [...yearSet].sort((a, b) => a - b);
+
+  const dpr = window.devicePixelRatio || 1;
+  const cW = canvas.offsetWidth, cH = canvas.offsetHeight;
+  if (!cW || !cH) return;
+  canvas.width = cW * dpr;
+  canvas.height = cH * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const PV_TOP = 6, PV_H = 44;
+  const RIBBON_TOP = PV_H + PV_TOP + 22;
+  const RIBBON_BOTTOM = cH - 28;
+  const LEFT = 8, RIGHT_LABEL = 160;
+  const chartW = cW - LEFT - RIGHT_LABEL;
+  const ribbonH = 7, gap = 1;
+
+  const xOf = yr => LEFT + (yr - ALLUVIAL_YEAR_START) / (ALLUVIAL_YEAR_END - ALLUVIAL_YEAR_START) * chartW;
+
+  ctx.clearRect(0, 0, cW, cH);
+  ctx.fillStyle = '#f9fafb';
+  ctx.fillRect(0, 0, cW, cH);
+
+  // PV capacity strip
+  if (timelineData) {
+    const pvMax = 34;
+    const capMap = {};
+    for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
+    ctx.beginPath();
+    let first = true;
+    for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
+      const gw = capMap[yr]; if (gw == null) { first = true; continue; }
+      const x = xOf(yr), y = PV_TOP + PV_H - (gw / pvMax) * PV_H;
+      if (first) { ctx.moveTo(x, PV_TOP + PV_H); ctx.lineTo(x, y); first = false; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.lineTo(xOf(2024), PV_TOP + PV_H);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(245,158,11,0.12)';
+    ctx.fill();
+    first = true;
+    ctx.beginPath();
+    for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
+      const gw = capMap[yr]; if (gw == null) { first = true; continue; }
+      const x = xOf(yr), y = PV_TOP + PV_H - (gw / pvMax) * PV_H;
+      if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(245,158,11,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([]);
+    ctx.stroke();
+    ctx.fillStyle = '#92400e';
+    ctx.font = '10px system-ui,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Solar PV installed (GW, REE)', LEFT + 2, PV_TOP + 12);
+  }
+
+  // Separator
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(LEFT, PV_H + PV_TOP + 8);
+  ctx.lineTo(LEFT + chartW, PV_H + PV_TOP + 8);
+  ctx.stroke();
+
+  // Policy event markers (dashed verticals)
+  if (timelineData) {
+    for (const ev of timelineData.events) {
+      const yr = parseInt(ev.date.slice(0, 4));
+      if (yr < ALLUVIAL_YEAR_START || yr > ALLUVIAL_YEAR_END) continue;
+      const x = xOf(yr);
+      ctx.save();
+      ctx.strokeStyle = EVENT_COLORS[ev.category] ?? '#aaa';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(x, PV_TOP);
+      ctx.lineTo(x, RIBBON_BOTTOM);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Year axis labels
+  ctx.fillStyle = '#888';
+  ctx.font = '10px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  for (let yr = ALLUVIAL_YEAR_START; yr <= ALLUVIAL_YEAR_END; yr += 2)
+    ctx.fillText(String(yr), xOf(yr), cH - 10);
+  ctx.textAlign = 'left';
+
+  // Compute Y positions at every event year
+  alluvialPosMap = {};
+  for (const yr of alluvialEventYears)
+    alluvialPosMap[yr] = computeAlluvialY(alluvialCases, yr, ribbonH, gap, RIBBON_TOP);
+
+  // Draw ribbons between consecutive event years
+  for (let i = 0; i < alluvialEventYears.length - 1; i++) {
+    const yr0 = alluvialEventYears[i], yr1 = alluvialEventYears[i + 1];
+    const x0 = xOf(yr0), x1 = xOf(yr1), cpx = (x0 + x1) / 2;
+    const { pos: pos0 } = alluvialPosMap[yr0];
+    const { pos: pos1 } = alluvialPosMap[yr1];
+
+    for (const c of alluvialCases) {
+      const p0 = pos0[c.no], p1 = pos1[c.no];
+      if (!p0 && !p1) continue;
+      if (!p0 && p1) {
+        // Case enters at yr1 — small birth tick
+        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + 'aa';
+        ctx.fillRect(x1 - 1, p1.y, 3, ribbonH);
+        continue;
+      }
+      if (p0 && !p1) continue;
+      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + 'cc';
+      ctx.beginPath();
+      ctx.moveTo(x0, p0.y);
+      ctx.bezierCurveTo(cpx, p0.y, cpx, p1.y, x1, p1.y);
+      ctx.lineTo(x1, p1.y + ribbonH);
+      ctx.bezierCurveTo(cpx, p0.y + ribbonH, cpx, p0.y + ribbonH, x0, p0.y + ribbonH);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // State labels on right
+  const lastYr = alluvialEventYears[alluvialEventYears.length - 1];
+  const { pos: posLast, groups: grpsLast } = alluvialPosMap[lastYr];
+  const xLabel = xOf(ALLUVIAL_YEAR_END) + 8;
+  ctx.font = '11px system-ui,sans-serif';
+  for (const state of ALLUVIAL_STATE_ORDER) {
+    const grp = grpsLast[state];
+    if (!grp?.length) continue;
+    const py0 = posLast[grp[0].no]?.y;
+    const pyN = posLast[grp[grp.length - 1].no]?.y;
+    if (py0 == null) continue;
+    const midY = ((py0 ?? 0) + (pyN ?? py0)) / 2 + ribbonH / 2;
+    ctx.fillStyle = ALLUVIAL_COLORS[state];
+    ctx.fillText(`${ALLUVIAL_LABELS[state]} (${grp.length})`, xLabel, midY + 4);
+  }
+}
+
+// Alluvial hover/click interactivity
+(function () {
+  const tip = document.getElementById("alluvial-tip");
+
+  function hitTest(e) {
+    const canvas = document.getElementById("chart-alluvial");
+    if (!canvas || !alluvialCases?.length || !alluvialEventYears.length) return null;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    if (mx < 0 || mx > canvas.offsetWidth || my < 0 || my > canvas.offsetHeight) return null;
+
+    const cW = canvas.offsetWidth;
+    const LEFT = 8, RIGHT_LABEL = 160;
+    const chartW = cW - LEFT - RIGHT_LABEL;
+    const yr = ALLUVIAL_YEAR_START + (mx - LEFT) / chartW * (ALLUVIAL_YEAR_END - ALLUVIAL_YEAR_START);
+    const nearYr = alluvialEventYears.reduce((b, y) => Math.abs(y - yr) < Math.abs(b - yr) ? y : b);
+    const { pos } = alluvialPosMap[nearYr] ?? {};
+    if (!pos) return null;
+
+    const ribbonH = 7;
+    for (const c of alluvialCases) {
+      const p = pos[c.no];
+      if (p && my >= p.y - 1 && my <= p.y + ribbonH + 1) return c;
+    }
+    return null;
+  }
+
+  document.addEventListener("mousemove", e => {
+    const canvas = document.getElementById("chart-alluvial");
+    if (!canvas) return;
+    const hit = hitTest(e);
+    canvas.style.cursor = hit ? "pointer" : "default";
+    if (hit && tip) {
+      tip.style.display = "block";
+      tip.style.left = (e.clientX + 14) + "px";
+      tip.style.top = (e.clientY - 30) + "px";
+      tip.textContent = hit.name;
+    } else if (tip) {
+      tip.style.display = "none";
+    }
+  });
+
+  document.addEventListener("click", e => {
+    const canvas = document.getElementById("chart-alluvial");
+    if (!canvas || !canvas.contains(e.target)) return;
+    const hit = hitTest(e);
+    if (hit) { if (tip) tip.style.display = "none"; showDetail(hit.no); }
+  });
+})();
 
 // --- SQL tab ---
 
