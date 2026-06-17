@@ -105,12 +105,28 @@
       "source": "https://quierosol.com/en/blog/sun-tax-in-spain"
     },
     {
+      "date": "2017-05-17",
+      "title": "Utility-scale solar auctions: ~3.9 GW awarded with Dec 2019 deadline",
+      "label": "2017 Renewable Auctions",
+      "category": "incentive",
+      "detail": "Spain held two competitive renewable energy auctions in 2017 (May 17 and July), awarding ~3,909 MW to solar PV — concentrated in the May auction — plus ~4,107 MW to wind. Winning projects faced a hard deadline of December 31, 2019 to connect to the grid or forfeit bonds. Developers spent 2017–2018 securing permits, land, and financing; over 3,700 MW of that solar capacity then connected in a single surge in 2019, driving the spike visible in the data. This — not the residential self-consumption rules — was the primary cause of the 2019 boom.",
+      "source": "https://www.vectorenewables.com/en/media-en/blog/new-renewable-energy-auction-to-be-held-in-spain-on-17-may-2017-are-you-ready"
+    },
+    {
       "date": "2018-03-06",
       "title": "Intra-EU BIT arbitration declared incompatible with EU law",
       "label": "Achmea (CJEU, C-284/16)",
       "category": "eu_law",
       "detail": "In Case C-284/16 (Achmea, 6 March 2018) the CJEU held that arbitration clauses in intra-EU bilateral investment treaties are incompatible with EU law, undermining intra-EU investor-state arbitration.",
       "source": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:62016CJ0284"
+    },
+    {
+      "date": "2018-04-10",
+      "title": "First large subsidy-free solar plant: merchant era begins",
+      "label": "Don Rodrigo PPA (BayWa / Statkraft)",
+      "category": "incentive",
+      "detail": "On 10 April 2018, BayWa r.e. and Statkraft signed a 15-year PPA for Don Rodrigo, a 170 MW solar plant near Seville — one of the first large-scale subsidy-free solar projects in Europe. The deal proved that Spanish solar could attract private financing purely on merchant terms, without any government subsidy, and opened a wave of corporate PPA-backed development running in parallel with the 2017 auction pipeline.",
+      "source": "https://www.pv-tech.org/ppa-signed-for-170mw-subsidy-free-solar-plant-in-spain/"
     },
     {
       "date": "2018-10-05",
