@@ -18,10 +18,11 @@
     { "year": 2021, "solar_pv_mw": 15286 },
     { "year": 2022, "solar_pv_mw": 18164 },
     { "year": 2023, "solar_pv_mw": 25549 },
-    { "year": 2024, "solar_pv_mw": 32043 }
+    { "year": 2024, "solar_pv_mw": 32043 },
+    { "year": 2025, "solar_pv_mw": 41500 }
   ],
-  "capacity_source": "Year-end cumulative grid-connected solar PV capacity for Spain, compiled from Red Electrica de Espana (REE) data as tabulated in the Wikipedia 'Solar power in Spain' article (https://en.wikipedia.org/wiki/Solar_power_in_Spain), with 2023 (25,549 MW) and 2024 (32,043 MW) figures from REE press reporting (https://www.ree.es/en/press-office/press-release/news/press-release/2025/02/solar-pv-takes-lead-spains-installed-power-capacity). The 2024 value is REE's figure as of 31 Jan 2025, used here as year-end 2024.",
-  "capacity_note": "Values are year-end CUMULATIVE installed solar photovoltaic capacity in MW. They are PV-only and EXCLUDE concentrated solar power (CSP/solar thermal). The series reflects REE grid-connected capacity in the Spanish peninsular/national electricity system, so it counts grid-connected installations and may under-count distributed self-consumption capacity (industry body UNEF reports higher totals, e.g. ~32.5 GW for 2023 and ~40 GW for 2024, because it includes self-consumption). The series clearly shows the 2008 boom (637 MW at end-2007 to 3,355 MW at end-2008 under RD 661/2007), the 2009-2018 near-freeze, and the post-2018 resurgence. Caveat: no clean year-end PV-only figures were found for 2004-2005, so the series begins at 2006; the exact 2007/2008 cutoff can vary slightly by source (some report ~690 MW end-2007 / ~3,463 MW end-2008).",
+  "capacity_source": "Year-end cumulative grid-connected solar PV capacity for Spain, compiled from Red Electrica de Espana (REE) data as tabulated in the Wikipedia 'Solar power in Spain' article (https://en.wikipedia.org/wiki/Solar_power_in_Spain), with 2023 (25,549 MW) and 2024 (32,043 MW) figures from REE press reporting (https://www.ree.es/en/press-office/press-release/news/press-release/2025/02/solar-pv-takes-lead-spains-installed-power-capacity). The 2024 value is REE's figure as of 31 Jan 2025, used here as year-end 2024. The 2025 figure (41,500 MW, a 26.6% increase over 2024) is from REE's renewable energies report (https://www.sistemaelectrico-ree.es/en/renewable-energies-report/sun/installed-capacity/photovoltaic-solar-sunpower) and confirmed by the REE 'Spanish Electricity System in 2025' press release (https://www.ree.es/en/press-office/news/press-release/2026/03/the-spanish-electricity-system-in-2025-electricity-demand-generation-and-installed-power-capacity-increase).",
+  "capacity_note": "Values are year-end CUMULATIVE installed solar photovoltaic capacity in MW. They are PV-only and EXCLUDE concentrated solar power (CSP/solar thermal). The series reflects REE grid-connected capacity in the Spanish peninsular/national electricity system, so it counts grid-connected installations and may under-count distributed self-consumption capacity (industry body UNEF reports higher totals, e.g. ~32.5 GW for 2023 and ~40 GW for 2024, because it includes self-consumption; when self-consumption is included Spain's total solar capacity reached ~49.5 GW by end-2025 and crossed 50 GW in early 2026). The series clearly shows the 2008 boom (637 MW at end-2007 to 3,355 MW at end-2008 under RD 661/2007), the 2009-2018 near-freeze, the recovery beginning 2019 after the repeal of the 'sun tax' and liberalization of self-consumption, and the acceleration from 2020 onward driven by the REER auction framework and NextGenerationEU funds. Caveat: no clean year-end PV-only figures were found for 2004-2005, so the series begins at 2006; the exact 2007/2008 cutoff can vary slightly by source (some report ~690 MW end-2007 / ~3,463 MW end-2008).",
   "events": [
     {
       "date": "2007-05-25",
@@ -96,12 +97,52 @@
       "source": "https://cms.law/en/esp/legal-updates/MAIN-AMENDMENTS-ESTABLISHED-BY-THE-ROYAL-DECREE-413-2014-DATED-6-JUNE-REGULATING-THE-PRODUCTION-OF-ELECTRICITY-FROM-RENEWABLE-ENERGY-SOURCES-COG"
     },
     {
+      "date": "2015-10-09",
+      "title": "'Sun tax' on solar self-consumption imposed",
+      "label": "RD 900/2015",
+      "category": "cut",
+      "detail": "Royal Decree 900/2015 (9 Oct 2015) imposed charges on electricity generated and self-consumed by solar panel owners — dubbed the 'impuesto al sol' (sun tax). Described as one of the world's most restrictive self-consumption regulations, it effectively halted distributed solar growth for three years.",
+      "source": "https://quierosol.com/en/blog/sun-tax-in-spain"
+    },
+    {
       "date": "2018-03-06",
       "title": "Intra-EU BIT arbitration declared incompatible with EU law",
       "label": "Achmea (CJEU, C-284/16)",
       "category": "eu_law",
       "detail": "In Case C-284/16 (Achmea, 6 March 2018) the CJEU held that arbitration clauses in intra-EU bilateral investment treaties are incompatible with EU law, undermining intra-EU investor-state arbitration.",
       "source": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:62016CJ0284"
+    },
+    {
+      "date": "2018-10-05",
+      "title": "Sun tax repealed",
+      "label": "RDL 15/2018",
+      "category": "incentive",
+      "detail": "Royal Decree-Law 15/2018 (5 Oct 2018) abolished the sun tax on self-consumed electricity, simplified administrative procedures for grid connection, and allowed collective self-consumption by building communities — reversing Spain's most punitive solar restriction.",
+      "source": "https://www.flobers.com/en/blog/la-derogacion-del-impuesto-al-sol"
+    },
+    {
+      "date": "2019-04-05",
+      "title": "Self-consumption fully liberalized",
+      "label": "RD 244/2019",
+      "category": "incentive",
+      "detail": "Royal Decree 244/2019 (5 April 2019) established the complete administrative, technical and economic framework for solar self-consumption, introducing net billing, removing remaining barriers, and allowing communities of neighbours to share solar installations. Triggered Spain's distributed solar boom.",
+      "source": "https://www.osborneclarke.com/insights/analysis-key-developments-introduced-new-royal-decree-2442019-5th-april-regulating-administrative-technical-economic-conditions-self-consumption-electrical-energy"
+    },
+    {
+      "date": "2020-11-03",
+      "title": "New renewable energy auction regime launched",
+      "label": "RD 960/2020",
+      "category": "incentive",
+      "detail": "Royal Decree 960/2020 (3 Nov 2020) established the Economic Regime for Renewable Energy (REER), replacing the abolished feed-in tariff with technology-neutral competitive price auctions. The first auction (26 Jan 2021) awarded 3 GW (2 GW solar + 1 GW wind) and sparked Spain's post-2020 utility-scale renewables surge.",
+      "source": "https://www.ramonycajalabogados.com/en/memorandum-spanish-royal-decree-9602020-renewable-energy-auctions"
+    },
+    {
+      "date": "2021-06-30",
+      "title": "NextGenerationEU solar grants deployed",
+      "label": "RD 477/2021",
+      "category": "incentive",
+      "detail": "Royal Decree 477/2021 (June 2021) deployed €1.3 billion in EU Recovery Funds (NextGenerationEU) via Spain's Plan de Recuperación, Transformación y Resiliencia, offering grants to homes and businesses for solar panels, batteries and heat pumps. The programme was later expanded by €505M (June 2022), accelerating distributed solar adoption.",
+      "source": "https://openroom.fundacionrepsol.com/en/contents/subsidies-available-fund-energy-transition/"
     },
     {
       "date": "2021-09-02",
@@ -112,20 +153,20 @@
       "source": "https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=CELEX:62019CJ0741"
     },
     {
-      "date": "2025-03-24",
-      "title": "EC rules paying ECT awards to EU investors is illegal state aid",
-      "label": "Commission Decision (EU) 2025/1235 — Antin",
-      "category": "eu_law",
-      "detail": "Commission Decision (EU) 2025/1235 (24 March 2025) found the ICSID arbitration award ordering Spain to pay Antin (~EUR 101m) to be illegal and incompatible State aid, barring its payment or enforcement.",
-      "source": "https://eur-lex.europa.eu/eli/dec/2025/1235/oj/eng"
-    },
-    {
       "date": "2024-04-16",
       "title": "Spain announces withdrawal from the ECT",
       "label": "Spain ECT withdrawal notice",
       "category": "ect",
       "detail": "Spain confirmed its intention to withdraw from the Energy Charter Treaty (announced April 2024; formal notice to the depositary given 27 June 2024), part of a coordinated EU exit. (Exact announcement date may vary slightly by source.)",
       "source": "https://www.business-humanrights.org/en/latest-news/spain-confirms-intention-to-withdraw-from-energy-charter-treaty/"
+    },
+    {
+      "date": "2025-03-24",
+      "title": "EC rules paying ECT awards to EU investors is illegal state aid",
+      "label": "Commission Decision (EU) 2025/1235 — Antin",
+      "category": "eu_law",
+      "detail": "Commission Decision (EU) 2025/1235 (24 March 2025) found the ICSID arbitration award ordering Spain to pay Antin (~EUR 101m) to be illegal and incompatible State aid, barring its payment or enforcement.",
+      "source": "https://eur-lex.europa.eu/eli/dec/2025/1235/oj/eng"
     },
     {
       "date": "2025-06-28",
