@@ -777,7 +777,7 @@
     <div id="guide-body" class="md-body">Loading…</div>
   </div>
 
-  <div id="alluvial-tip" style="display:none;position:fixed;background:#1a3a5c;color:#fff;padding:5px 10px;border-radius:4px;font-size:11px;pointer-events:none;z-index:9999;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+  <div id="alluvial-tip" style="display:none;position:fixed;background:#1a3a5c;color:#fff;padding:6px 11px;border-radius:4px;font-size:11px;pointer-events:none;z-index:9999;max-width:300px;line-height:1.5;"></div>
 
   <div id="event-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center">
     <div onclick="closeEventModal()" style="position:absolute;inset:0;background:rgba(0,0,0,0.35)"></div>
@@ -1992,9 +1992,9 @@ function renderAlluvial() {
       alluvialEventPositions.push({ ev, x });
       ctx.save();
       ctx.strokeStyle = EVENT_COLORS[ev.category] ?? '#aaa';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([3, 3]);
-      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 3]);
+      ctx.globalAlpha = 0.6;
       ctx.beginPath();
       ctx.moveTo(x, RIBBON_TOP);
       ctx.lineTo(x, RIBBON_BOTTOM);
@@ -2200,7 +2200,7 @@ document.addEventListener("keydown", e => {
         tip.style.display = "block";
         tip.style.left = (e.clientX + 14) + "px";
         tip.style.top = (e.clientY - 30) + "px";
-        tip.textContent = `${evHit.label} (${evHit.date.slice(0,4)}) — click for detail`;
+        tip.innerHTML = `<strong>${evHit.title || evHit.label}</strong><br><span style="opacity:.75">${evHit.label} · ${evHit.date.slice(0,4)} — click for detail</span>`;
       }
       return;
     }
