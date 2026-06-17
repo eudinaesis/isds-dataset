@@ -1950,7 +1950,7 @@ function renderAlluvial() {
   ctx.font = '9px system-ui,sans-serif';
   ctx.fillStyle = '#aaa';
   for (let gw = 0; gw <= 40; gw += 10) {
-    const ay = Math.round(RIBBON_BOTTOM - (gw / 50) * ribbonAreaH);
+    const ay = Math.round(RIBBON_BOTTOM - (gw / 42) * ribbonAreaH);
     ctx.strokeStyle = 'rgba(0,0,0,0.04)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(LEFT, ay); ctx.lineTo(LEFT + chartW, ay); ctx.stroke();
@@ -1964,7 +1964,7 @@ function renderAlluvial() {
 
   // --- PV capacity overlay (drawn first, behind ribbons) ---
   if (timelineData) {
-    const pvMax = 50; // GW — 41.5 GW (end-2025) reaches ~83% of ribbonAreaH
+    const pvMax = 42; // GW — 41.5 GW (end-2025) reaches ~99% of ribbonAreaH
     const capMap = {};
     for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
 
@@ -2047,7 +2047,7 @@ function renderAlluvial() {
 
   // --- PV line (drawn in front of ribbons) ---
   if (alluvialPvCapMap) {
-    const pvMax = 50;
+    const pvMax = 42;
     const pvPath = () => {
       let first = true;
       ctx.beginPath();
@@ -2165,7 +2165,7 @@ document.addEventListener("keydown", e => {
     if (g0 == null && g1 == null) return false;
     const gw = (g0 != null && g1 != null) ? g0 + (g1 - g0) * (yr - floorYr) : (g0 ?? g1);
     const ribbonAreaH = alluvialRibbonBottom - alluvialRibbonTop;
-    const pvY = alluvialRibbonBottom - (gw / 50) * ribbonAreaH;
+    const pvY = alluvialRibbonBottom - (gw / 42) * ribbonAreaH;
     return Math.abs(my - pvY) <= 6;
   }
 
