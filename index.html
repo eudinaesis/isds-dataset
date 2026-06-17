@@ -779,6 +779,20 @@
 
   <div id="alluvial-tip" style="display:none;position:fixed;background:#1a3a5c;color:#fff;padding:5px 10px;border-radius:4px;font-size:11px;pointer-events:none;z-index:9999;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
 
+  <div id="event-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center">
+    <div onclick="closeEventModal()" style="position:absolute;inset:0;background:rgba(0,0,0,0.35)"></div>
+    <div style="position:relative;background:#fff;border-radius:8px;padding:22px 24px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span id="event-modal-badge" style="font-size:10px;padding:2px 9px;border-radius:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em"></span>
+        <span id="event-modal-date" style="font-size:12px;color:#888"></span>
+        <button onclick="closeEventModal()" style="margin-left:auto;font-size:20px;background:none;border:none;cursor:pointer;color:#999;line-height:1;padding:0">✕</button>
+      </div>
+      <h3 id="event-modal-title" style="font-size:16px;margin:0 0 10px;color:#1a3a5c"></h3>
+      <p id="event-modal-detail" style="font-size:13px;line-height:1.65;color:#444;margin:0 0 14px"></p>
+      <a id="event-modal-source" target="_blank" rel="noopener" style="font-size:12px;color:#1a3a5c;text-decoration:none;border-bottom:1px solid #1a3a5c">Source ↗</a>
+    </div>
+  </div>
+
   <div id="doc-modal" style="display:none">
     <div id="doc-modal-overlay" onclick="closeDocModal()"></div>
     <div id="doc-modal-panel">
@@ -1792,6 +1806,8 @@ const ALLUVIAL_LABELS = {
 let alluvialCases = null;
 let alluvialEventYears = [];
 let alluvialPosMap = {};
+let alluvialEventPositions = [];   // [{ev, x}] — populated during render
+let alluvialRibbonTop = 0, alluvialRibbonBottom = 0;
 
 function extractDecisionYear(decisions, status) {
   if (!decisions || status === 'Pending') return null;
@@ -1848,7 +1864,7 @@ function getCaseStateAt(c, year) {
   return 'pending';
 }
 
-function computeAlluvialY(cases, year, ribbonH, gap, topY) {
+function computeAlluvialY(cases, year, ribbonH, gap, bottomY) {
   const groups = {};
   for (const k of ALLUVIAL_STATE_ORDER) groups[k] = [];
   for (const c of cases) {
@@ -1857,10 +1873,12 @@ function computeAlluvialY(cases, year, ribbonH, gap, topY) {
   }
   for (const g of Object.values(groups)) g.sort((a, b) => a.no - b.no);
   const pos = {};
-  let y = topY;
-  for (const k of ALLUVIAL_STATE_ORDER) {
-    for (const c of groups[k]) { pos[c.no] = { y, state: k }; y += ribbonH + gap; }
-    if (groups[k].length) y += 3;
+  let y = bottomY;
+  // Stack upward: reverse order so pending sits at the bottom, paid floats to the top
+  for (const k of [...ALLUVIAL_STATE_ORDER].reverse()) {
+    const grp = groups[k];
+    for (const c of grp) { y -= ribbonH; pos[c.no] = { y, state: k }; y -= gap; }
+    if (grp.length) y -= 3;
   }
   return { pos, groups };
 }
@@ -1887,9 +1905,12 @@ function renderAlluvial() {
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
 
-  const PV_TOP = 6, PV_H = 44;
-  const RIBBON_TOP = PV_H + PV_TOP + 22;
+  const RIBBON_TOP = 16;
   const RIBBON_BOTTOM = cH - 28;
+  alluvialRibbonTop = RIBBON_TOP;
+  alluvialRibbonBottom = RIBBON_BOTTOM;
+  const ribbonAreaH = RIBBON_BOTTOM - RIBBON_TOP;
+
   const LEFT = 8, RIGHT_LABEL = 160;
   const chartW = cW - LEFT - RIGHT_LABEL;
   const ribbonH = 7, gap = 1;
@@ -1900,69 +1921,70 @@ function renderAlluvial() {
   ctx.fillStyle = '#f9fafb';
   ctx.fillRect(0, 0, cW, cH);
 
-  // PV capacity strip
+  // --- PV capacity overlay (drawn first, behind ribbons) ---
   if (timelineData) {
-    const pvMax = 34;
+    const pvMax = 35; // GW — 32 GW reaches ~91% of ribbonAreaH
     const capMap = {};
     for (const c of timelineData.capacity) capMap[c.year] = c.solar_pv_mw / 1000;
+
+    // Filled area from RIBBON_BOTTOM upward
     ctx.beginPath();
-    let first = true;
+    ctx.moveTo(xOf(ALLUVIAL_YEAR_START), RIBBON_BOTTOM);
     for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
-      const gw = capMap[yr]; if (gw == null) { first = true; continue; }
-      const x = xOf(yr), y = PV_TOP + PV_H - (gw / pvMax) * PV_H;
-      if (first) { ctx.moveTo(x, PV_TOP + PV_H); ctx.lineTo(x, y); first = false; }
-      else ctx.lineTo(x, y);
+      const gw = capMap[yr]; if (gw == null) continue;
+      ctx.lineTo(xOf(yr), RIBBON_BOTTOM - (gw / pvMax) * ribbonAreaH);
     }
-    ctx.lineTo(xOf(2024), PV_TOP + PV_H);
+    ctx.lineTo(xOf(2024), RIBBON_BOTTOM);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(245,158,11,0.12)';
+    ctx.fillStyle = 'rgba(245,158,11,0.09)';
     ctx.fill();
-    first = true;
+
+    // PV line
+    let first = true;
     ctx.beginPath();
     for (let yr = ALLUVIAL_YEAR_START; yr <= 2024; yr++) {
       const gw = capMap[yr]; if (gw == null) { first = true; continue; }
-      const x = xOf(yr), y = PV_TOP + PV_H - (gw / pvMax) * PV_H;
+      const x = xOf(yr), y = RIBBON_BOTTOM - (gw / pvMax) * ribbonAreaH;
       if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
     }
-    ctx.strokeStyle = 'rgba(245,158,11,0.7)';
+    ctx.strokeStyle = 'rgba(245,158,11,0.55)';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([]);
     ctx.stroke();
-    ctx.fillStyle = '#92400e';
-    ctx.font = '10px system-ui,sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('Solar PV installed (GW, REE)', LEFT + 2, PV_TOP + 12);
+
+    // Label near the 2024 line end
+    const gw24 = capMap[2024];
+    if (gw24) {
+      const ly = RIBBON_BOTTOM - (gw24 / pvMax) * ribbonAreaH;
+      ctx.fillStyle = '#92400e';
+      ctx.font = '10px system-ui,sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Solar PV (GW)', xOf(2024) + 4, ly - 4);
+    }
   }
 
-  // Separator
-  ctx.strokeStyle = '#e5e7eb';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.moveTo(LEFT, PV_H + PV_TOP + 8);
-  ctx.lineTo(LEFT + chartW, PV_H + PV_TOP + 8);
-  ctx.stroke();
-
-  // Policy event markers (dashed verticals)
+  // --- Policy event markers (dashed verticals) ---
+  alluvialEventPositions = [];
   if (timelineData) {
     for (const ev of timelineData.events) {
       const yr = parseInt(ev.date.slice(0, 4));
       if (yr < ALLUVIAL_YEAR_START || yr > ALLUVIAL_YEAR_END) continue;
       const x = xOf(yr);
+      alluvialEventPositions.push({ ev, x });
       ctx.save();
       ctx.strokeStyle = EVENT_COLORS[ev.category] ?? '#aaa';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.5;
       ctx.setLineDash([3, 3]);
-      ctx.globalAlpha = 0.4;
+      ctx.globalAlpha = 0.5;
       ctx.beginPath();
-      ctx.moveTo(x, PV_TOP);
+      ctx.moveTo(x, RIBBON_TOP);
       ctx.lineTo(x, RIBBON_BOTTOM);
       ctx.stroke();
       ctx.restore();
     }
   }
 
-  // Year axis labels
+  // --- Year axis labels ---
   ctx.fillStyle = '#888';
   ctx.font = '10px system-ui,sans-serif';
   ctx.textAlign = 'center';
@@ -1970,12 +1992,12 @@ function renderAlluvial() {
     ctx.fillText(String(yr), xOf(yr), cH - 10);
   ctx.textAlign = 'left';
 
-  // Compute Y positions at every event year
+  // --- Compute Y positions (stacking upward from RIBBON_BOTTOM) ---
   alluvialPosMap = {};
   for (const yr of alluvialEventYears)
-    alluvialPosMap[yr] = computeAlluvialY(alluvialCases, yr, ribbonH, gap, RIBBON_TOP);
+    alluvialPosMap[yr] = computeAlluvialY(alluvialCases, yr, ribbonH, gap, RIBBON_BOTTOM);
 
-  // Draw ribbons between consecutive event years
+  // --- Draw ribbons between consecutive event years ---
   for (let i = 0; i < alluvialEventYears.length - 1; i++) {
     const yr0 = alluvialEventYears[i], yr1 = alluvialEventYears[i + 1];
     const x0 = xOf(yr0), x1 = xOf(yr1), cpx = (x0 + x1) / 2;
@@ -1986,9 +2008,9 @@ function renderAlluvial() {
       const p0 = pos0[c.no], p1 = pos1[c.no];
       if (!p0 && !p1) continue;
       if (!p0 && p1) {
-        // Case enters at yr1 — small birth tick
+        // Case born — entry tick at left edge of its first active segment
         ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + 'aa';
-        ctx.fillRect(x1 - 1, p1.y, 3, ribbonH);
+        ctx.fillRect(x1, p1.y, 3, ribbonH);
         continue;
       }
       if (p0 && !p1) continue;
@@ -2003,7 +2025,7 @@ function renderAlluvial() {
     }
   }
 
-  // State labels on right
+  // --- State labels on right ---
   const lastYr = alluvialEventYears[alluvialEventYears.length - 1];
   const { pos: posLast, groups: grpsLast } = alluvialPosMap[lastYr];
   const xLabel = xOf(ALLUVIAL_YEAR_END) + 8;
@@ -2020,17 +2042,47 @@ function renderAlluvial() {
   }
 }
 
+function openEventModal(ev) {
+  const modal = document.getElementById("event-modal");
+  if (!modal) return;
+  const CAT = { incentive: "Incentive", cut: "Subsidy cut", eu_law: "EU ruling", ect: "ECT" };
+  const badge = document.getElementById("event-modal-badge");
+  badge.textContent = CAT[ev.category] ?? ev.category;
+  badge.style.background = (EVENT_COLORS[ev.category] ?? '#aaa') + '22';
+  badge.style.color = EVENT_COLORS[ev.category] ?? '#aaa';
+  document.getElementById("event-modal-date").textContent = ev.date;
+  document.getElementById("event-modal-title").textContent = ev.label;
+  document.getElementById("event-modal-detail").textContent = ev.detail;
+  const src = document.getElementById("event-modal-source");
+  if (ev.source) { src.href = ev.source; src.style.display = ""; }
+  else src.style.display = "none";
+  modal.style.display = "flex";
+}
+
+function closeEventModal() {
+  const m = document.getElementById("event-modal");
+  if (m) m.style.display = "none";
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeEventModal();
+});
+
 // Alluvial hover/click interactivity
 (function () {
   const tip = document.getElementById("alluvial-tip");
+  const EVENT_X_THRESHOLD = 7; // px
 
-  function hitTest(e) {
-    const canvas = document.getElementById("chart-alluvial");
-    if (!canvas || !alluvialCases?.length || !alluvialEventYears.length) return null;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    if (mx < 0 || mx > canvas.offsetWidth || my < 0 || my > canvas.offsetHeight) return null;
+  function getEventHit(canvas, mx, my) {
+    if (!alluvialEventPositions.length) return null;
+    if (my < alluvialRibbonTop || my > alluvialRibbonBottom) return null;
+    for (const { ev, x } of alluvialEventPositions)
+      if (Math.abs(mx - x) <= EVENT_X_THRESHOLD) return ev;
+    return null;
+  }
 
+  function getRibbonHit(canvas, mx, my) {
+    if (!alluvialCases?.length || !alluvialEventYears.length) return null;
     const cW = canvas.offsetWidth;
     const LEFT = 8, RIGHT_LABEL = 160;
     const chartW = cW - LEFT - RIGHT_LABEL;
@@ -2038,11 +2090,10 @@ function renderAlluvial() {
     const nearYr = alluvialEventYears.reduce((b, y) => Math.abs(y - yr) < Math.abs(b - yr) ? y : b);
     const { pos } = alluvialPosMap[nearYr] ?? {};
     if (!pos) return null;
-
-    const ribbonH = 7;
+    const rH = 7;
     for (const c of alluvialCases) {
       const p = pos[c.no];
-      if (p && my >= p.y - 1 && my <= p.y + ribbonH + 1) return c;
+      if (p && my >= p.y - 1 && my <= p.y + rH + 1) return c;
     }
     return null;
   }
@@ -2050,23 +2101,50 @@ function renderAlluvial() {
   document.addEventListener("mousemove", e => {
     const canvas = document.getElementById("chart-alluvial");
     if (!canvas) return;
-    const hit = hitTest(e);
-    canvas.style.cursor = hit ? "pointer" : "default";
-    if (hit && tip) {
-      tip.style.display = "block";
-      tip.style.left = (e.clientX + 14) + "px";
-      tip.style.top = (e.clientY - 30) + "px";
-      tip.textContent = hit.name;
-    } else if (tip) {
-      tip.style.display = "none";
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    if (mx < 0 || mx > canvas.offsetWidth || my < 0 || my > canvas.offsetHeight) {
+      if (tip) tip.style.display = "none";
+      return;
+    }
+
+    const evHit = getEventHit(canvas, mx, my);
+    if (evHit) {
+      canvas.style.cursor = "pointer";
+      if (tip) {
+        tip.style.display = "block";
+        tip.style.left = (e.clientX + 14) + "px";
+        tip.style.top = (e.clientY - 30) + "px";
+        tip.textContent = `${evHit.label} (${evHit.date.slice(0,4)}) — click for detail`;
+      }
+      return;
+    }
+
+    const ribbonHit = getRibbonHit(canvas, mx, my);
+    canvas.style.cursor = ribbonHit ? "pointer" : "default";
+    if (tip) {
+      if (ribbonHit) {
+        tip.style.display = "block";
+        tip.style.left = (e.clientX + 14) + "px";
+        tip.style.top = (e.clientY - 30) + "px";
+        tip.textContent = ribbonHit.name;
+      } else {
+        tip.style.display = "none";
+      }
     }
   });
 
   document.addEventListener("click", e => {
     const canvas = document.getElementById("chart-alluvial");
     if (!canvas || !canvas.contains(e.target)) return;
-    const hit = hitTest(e);
-    if (hit) { if (tip) tip.style.display = "none"; showDetail(hit.no); }
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+    const evHit = getEventHit(canvas, mx, my);
+    if (evHit) { if (tip) tip.style.display = "none"; openEventModal(evHit); return; }
+
+    const ribbonHit = getRibbonHit(canvas, mx, my);
+    if (ribbonHit) { if (tip) tip.style.display = "none"; showDetail(ribbonHit.no); }
   });
 })();
 
