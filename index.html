@@ -757,11 +757,6 @@
       </div>
     </div>
     <div class="spain-grid">
-      <div class="spain-card spain-card-wide"><h3>Spain ECT Case Lifecycle <span class="card-sub">— all 56 Spain cases: filing → outcome → enforcement</span></h3><div class="chart-wrap-wide"><canvas id="chart-lifecycle"></canvas></div></div>
-      <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
-      <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
-      <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
-      <div class="spain-card"><h3>Compensation Claimed vs. Awarded (USD millions)</h3><div class="chart-wrap"><canvas id="chart-amounts"></canvas></div></div>
       <div class="spain-card spain-card-wide">
         <h3>Solar PV Build-out, Filings &amp; Policy Timeline <span class="card-sub">— Spain 2005–2025</span></h3>
         <div class="timeline-event-legend">
@@ -773,8 +768,13 @@
         </div>
         <div class="chart-wrap-wide"><canvas id="chart-timeline"></canvas></div>
       </div>
+      <div class="spain-card spain-card-wide"><h3>Spain ECT Case Lifecycle <span class="card-sub">— all 56 Spain cases: filing → outcome → enforcement</span></h3><div class="chart-wrap-wide"><canvas id="chart-lifecycle"></canvas></div></div>
+      <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
+      <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
+      <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
+      <div class="spain-card"><h3>Compensation Claimed vs. Awarded (USD millions)</h3><div class="chart-wrap"><canvas id="chart-amounts"></canvas></div></div>
       <div class="spain-card spain-card-wide">
-        <h3>Enforcement Proceedings Timeline <span class="card-sub">— Spain ECT cases with court activity (hover for detail)</span></h3>
+        <h3>Enforcement Proceedings Timeline <span class="card-sub">— Spain ECT cases with court activity (click to open case)</span></h3>
         <div class="chart-wrap-gantt"><canvas id="chart-gantt"></canvas></div>
       </div>
     </div>
@@ -1706,7 +1706,7 @@ function renderGantt() {
     const x = parseEnfDate(r.date_text);
     if (x === null) continue;
     if (!groups[r.result]) groups[r.result] = [];
-    groups[r.result].push({ x, y: caseIdx[r.case_no], forum: r.forum, date: r.date_text, name: r.short_name });
+    groups[r.result].push({ x, y: caseIdx[r.case_no], forum: r.forum, date: r.date_text, name: r.short_name, case_no: r.case_no });
   }
 
   const shortName = n =>
@@ -1736,9 +1736,19 @@ function renderGantt() {
               const d = ctx.raw;
               return ` ${d.name} — ${d.forum} (${d.date}) → ${ctx.dataset.label}`;
             },
+            footer: () => ["Click to open case detail"],
           },
           filter: item => !!item.raw.name,
         },
+      },
+      onClick(evt, elements, chart) {
+        if (!elements.length) return;
+        const { datasetIndex, index } = elements[0];
+        const d = chart.data.datasets[datasetIndex].data[index];
+        if (d.case_no) showDetail(d.case_no);
+      },
+      onHover(evt, elements) {
+        if (evt.native) evt.native.target.style.cursor = elements.length ? "pointer" : "default";
       },
       scales: {
         x: {
