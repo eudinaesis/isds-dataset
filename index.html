@@ -437,7 +437,7 @@
   .chart-wrap { position: relative; height: 280px; }
   .chart-wrap-tall { position: relative; height: 340px; }
   .chart-wrap-wide { position: relative; height: 380px; }
-  .chart-wrap-gantt { position: relative; height: 440px; }
+
   .chart-wrap-alluvial { position: relative; height: 600px; }
   .spain-card-wide { grid-column: 1 / -1; }
   .spain-card h3 .card-sub { text-transform: none; letter-spacing: 0; color: #999; font-weight: 400; }
@@ -793,10 +793,6 @@
       </div>
       <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
       <div class="spain-card"><h3>Compensation Claimed vs. Awarded (USD millions)</h3><div class="chart-wrap"><canvas id="chart-amounts"></canvas></div></div>
-      <div class="spain-card spain-card-wide">
-        <h3>Enforcement Proceedings Timeline <span class="card-sub">— Spain ECT cases with court activity (click to open case)</span></h3>
-        <div class="chart-wrap-gantt"><canvas id="chart-gantt"></canvas></div>
-      </div>
     </div>
   </div>
 
@@ -1354,7 +1350,6 @@ function renderViz() {
   renderAlluvial();
   renderAlluvialWeighted();
   renderEconChart();
-  renderGantt();
 }
 
 const LIFECYCLE_COLORS = {
@@ -2058,14 +2053,7 @@ function renderTimeline() {
   });
 }
 
-const RESULT_COLORS_GANTT = {
-  enforced: "#3b82f6", set_aside: "#ef4444", annulled: "#f59e0b",
-  pending: "#8b5cf6", appeal_pending: "#f97316", blocked: "#dc2626", dismissed: "#9ca3af",
-};
-const RESULT_LABELS_GANTT = {
-  enforced: "Enforced", set_aside: "Set aside", annulled: "Annulled",
-  pending: "Pending", appeal_pending: "Appeal pending", blocked: "Blocked", dismissed: "Dismissed",
-};
+
 const MONTH_ABBR = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
 
 function parseEnfDate(dateText) {
@@ -2081,101 +2069,6 @@ function parseEnfDate(dateText) {
   return null;
 }
 
-function renderGantt() {
-  const canvas = document.getElementById("chart-gantt");
-  if (!canvas) return;
-
-  const rows = dbAll(`
-    SELECT ep.case_no, c.short_name, ep.forum, ep.result, ep.date_text
-    FROM enforcement_proceedings ep JOIN cases c ON ep.case_no = c.no
-    ORDER BY ep.case_no, ep.id
-  `);
-  if (!rows.length) { canvas.closest(".spain-card").style.display = "none"; return; }
-
-  const caseOrder = [], caseSeen = {};
-  for (const r of rows)
-    if (!caseSeen[r.case_no]) { caseSeen[r.case_no] = true; caseOrder.push({ case_no: r.case_no, short_name: r.short_name }); }
-  const caseIdx = {};
-  caseOrder.forEach((c, i) => { caseIdx[c.case_no] = i; });
-
-  const groups = {};
-  for (const r of rows) {
-    const x = parseEnfDate(r.date_text);
-    if (x === null) continue;
-    if (!groups[r.result]) groups[r.result] = [];
-    groups[r.result].push({ x, y: caseIdx[r.case_no], forum: r.forum, date: r.date_text, name: r.short_name, case_no: r.case_no });
-  }
-
-  const shortName = n =>
-    n.replace(" and Energía Solar", "").replace("Infrastructure Services and Energia Termosolar (formerly Antin)", "Antin / Infra Services").replace(" v. Spain", "").replace(" and others", " et al.");
-  const yLabels = caseOrder.map(c => shortName(c.short_name));
-
-  const datasets = Object.entries(groups).map(([result, pts]) => ({
-    label: RESULT_LABELS_GANTT[result] ?? result,
-    data: pts,
-    backgroundColor: RESULT_COLORS_GANTT[result] ?? "#aaa",
-    pointRadius: 10,
-    pointHoverRadius: 13,
-    parsing: false,
-  }));
-
-  vizCharts.gantt = new Chart(canvas, {
-    type: "scatter",
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 8 } },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const d = ctx.raw;
-              return ` ${d.name} — ${d.forum} (${d.date}) → ${ctx.dataset.label}`;
-            },
-            footer: () => ["Click to open case detail"],
-          },
-          filter: item => !!item.raw.name,
-        },
-      },
-      onClick(evt, elements, chart) {
-        if (!elements.length) return;
-        const { datasetIndex, index } = elements[0];
-        const d = chart.data.datasets[datasetIndex].data[index];
-        if (d.case_no) showDetail(d.case_no);
-      },
-      onHover(evt, elements) {
-        if (evt.native) evt.native.target.style.cursor = elements.length ? "pointer" : "default";
-      },
-      scales: {
-        x: {
-          type: "linear", min: 1998, max: 2027,
-          title: { display: true, text: "Year", font: { size: 11 } },
-          ticks: {
-            stepSize: 1,
-            callback: v => {
-              if (!Number.isInteger(v)) return "";
-              if (v === 2000 || (v >= 2020 && v % 2 === 0) || v === 2025 || v === 2026) return String(v);
-              return "";
-            },
-          },
-        },
-        y: {
-          type: "linear",
-          min: -0.5,
-          max: caseOrder.length - 0.5,
-          reverse: true,
-          ticks: {
-            stepSize: 1,
-            callback: v => yLabels[v] ?? "",
-            font: { size: 10 },
-          },
-          grid: { color: "rgba(0,0,0,0.05)" },
-        },
-      },
-    },
-  });
-}
 
 // --- Alluvial flow chart ---
 
