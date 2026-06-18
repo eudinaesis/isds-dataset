@@ -763,7 +763,7 @@
         <div class="chart-wrap-alluvial"><canvas id="chart-alluvial" style="width:100%;height:100%;display:block"></canvas></div>
       </div>
       <div class="spain-card spain-card-wide">
-        <h3>Spain ECT Case Flow — Claim &amp; Award Scale <span class="card-sub">— ribbon thickness ∝ claimed amount before decision → shrinks to award · 1 px hairline if Spain wins, blocked, or discontinued · hover for amounts</span></h3>
+        <h3>Spain ECT Case Flow — Claim &amp; Award Scale <span class="card-sub">— ribbon thickness ∝ claimed amount before decision → shrinks to award · 1 px hairline if Spain wins, blocked, or discontinued · hover for amounts, unknown claims graphed as $50M</span></h3>
         <div class="chart-wrap-alluvial"><canvas id="chart-alluvial-w" style="width:100%;height:100%;display:block"></canvas></div>
       </div>
       <div class="spain-card spain-card-wide">
@@ -1977,6 +1977,7 @@ function setHoveredCase(no) {
 function caseTooltipHTML(c) {
   const parts = [];
   if (c.claimM != null) parts.push(`$${c.claimM.toFixed(0)}M claimed`);
+  else parts.push('Unknown claim amount');
   if (c.awardM != null) parts.push(`$${c.awardM.toFixed(0)}M awarded`);
   const st = c.status;
   if (st === 'Decided in favour of investor') {
@@ -2134,7 +2135,7 @@ function computeAlluvialYW(cases, year, scale, ribbonBottom, zeroY) {
       pos[c.no] = { y: yTop, h, state: k, shade };
       // no inter-flow gap — alternating shades make individual flows visible
     }
-    if (grp.length) yTop -= 3; // small gap between categories only
+    if (grp.length && year !== ALLUVIAL_YEAR_END) yTop -= 3; // small gap between categories (omit on final column)
   }
 
   return { pos, groups };
@@ -2403,7 +2404,6 @@ function renderAlluvialWeighted() {
     for (const k of ALLUVIAL_W_TOP) {
       if (!tmp[k].length) continue;
       for (const c of tmp[k]) sh += ribbonHW(c, yr, 1);
-      sh += 3;
     }
     maxTopH = Math.max(maxTopH, sh);
   }
