@@ -15,7 +15,7 @@ Must use a file server — `file://` is blocked by CORS on the DB fetch. `serve.
 
 ## Key files
 
-- `index.html` — single-page app (~1550 lines); JS starts around line 893
+- `index.html` — single-page app (~1700 lines); JS starts around line 893
 - `isds.db` — committed to git; regenerate with the pipeline below
 - `GUIDE.md` — rendered in the Guide tab via marked.js
 - `convert.py` — Excel → `isds.db` (run once; requires openpyxl)
@@ -24,7 +24,9 @@ Must use a file server — `file://` is blocked by CORS on the DB fetch. `serve.
 - `seed_proceedings.py` — seeds `enforcement_proceedings` for Spain cases with court activity
 - `SPAIN_ANALYSIS.md` — 18-question statistical breakdown (rendered via doc-viewer modal)
 - `spain_cases_research.md` — case-by-case research notes (rendered via doc-viewer modal)
-- `timeline_data.json` — external reference data (Spain solar PV capacity by year + dated policy/EU-law/ECT events) for the master timeline chart; NOT in `isds.db`, fetched separately
+- `timeline_data.json` — external reference data: Spain solar PV capacity by year (REE-sourced), dated policy/EU-law/ECT events, annual PV investment estimates, and annual PV subsidy costs. Used by the master timeline chart; NOT in `isds.db`, fetched separately. See `pv_subsidy_note` for sourcing: 2006–2012 subsidy values are CNE net-support-cost figures from IISD Table A4; 2013 is Mir-Artigues et al. (2015) gross figure; 2014–2025 are unconfirmed estimates.
+- `ECT_Spain_Claims_Ultimate_Ownership.md` — maps 15 landmark cases from nominal incorporation country to ultimate economic owner nationality (treaty-shopping / round-tripping analysis). Used by `ULT_OWNER` lookup in `renderOriginRings()`.
+- `gemini_solar_subsidies_investment.md` — AI-generated dataset of Spain solar subsidies and private investment 2006–2025. **Do not use as a primary source** — see inline notes for specific errors identified vs. REE/CNE authoritative data.
 - `timeline-todo.md` — roadmap for the Spain-ECT-story timeline visualizations
 
 **DB regeneration pipeline:**
@@ -37,7 +39,7 @@ After any schema change: run migrate.py + seed scripts, then commit `isds.db`.
 
 1. **Browse** — default view, pre-filtered to Spain. Sidebar facets (Enforcement at top). Table with Enforcement badge column. Click row → detail panel.
 2. **SQL** — read-only queries (SELECT/WITH/EXPLAIN/PRAGMA). Pre-populates with current Browse query. Cmd+Enter runs.
-3. **Visualizations** — 4 Chart.js charts. Scatter dots colored by enforcement_status. Tracks Browse or SQL result set.
+3. **Visualizations** — Chart.js charts including: two-level doughnut (country of origin: inner = ultimate economic owner, outer = incorporation, wedge = award/claim amount; click = case detail; mobile tap = tooltip, long-press = detail), sankey lifecycle flow, timeline/econ chart, scatter (claimed vs. awarded), and Gantt. Tracks Browse or SQL result set.
 4. **Guide** — renders GUIDE.md via marked.js. Local `.md` links open in a doc-viewer modal.
 5. **Case Browser** — 56 Spain cases ordered by USD claim amount desc. Arrow-key navigation. Read-only.
 
@@ -56,6 +58,9 @@ After any schema change: run migrate.py + seed scripts, then commit `isds.db`.
 - `dbAll(sql, params)` — parameterized query → array of objects
 - `buildSearchSQL(q, filters)` — returns `{where, args}` for the standard WHERE clause
 - `enforcementIndex` — `{case_no: enforcement_status}` from research_notes
+- `ULT_OWNER` — `{case_no: country}` hardcoded map of ultimate economic owner nationality for 15 landmark cases, sourced from `ECT_Spain_Claims_Ultimate_Ownership.md`
+- `vizRows` — current row set driving all viz charts; updated by `loadVizPreset()` or `updateVizFromBrowse()`
+- `originShowClaimed` — boolean toggle: when false (default), Spain-won/dropped cases contribute $0 to the origin rings chart; when true, they show their claimed amount
 
 ## Rules
 

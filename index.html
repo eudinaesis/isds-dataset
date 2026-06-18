@@ -772,7 +772,25 @@
         <div class="chart-wrap-wide"><canvas id="chart-econ"></canvas></div>
       </div>
       <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
-      <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
+      <div class="spain-card spain-card-wide">
+        <h3>Investors' Country of Origin: Registration vs. Ultimate Ownership
+          <span class="card-sub">— inner ring = ultimate economic owner · outer ring = country of incorporation · wedge size = amount · click a wedge for case detail</span>
+        </h3>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 8px;font-size:12px;color:#555">
+          <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none">
+            <span>State-won / dropped cases:</span>
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span id="origin-tog-off" style="font-weight:600">€0 (actual)</span>
+              <input type="checkbox" id="origin-claimed-toggle" onchange="toggleOriginAmounts(this)" style="cursor:pointer">
+              <span id="origin-tog-on" style="color:#999">claimed</span>
+            </span>
+          </label>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+          <div class="chart-wrap-tall" style="flex:1 1 420px;min-width:320px"><canvas id="chart-origin-rings"></canvas></div>
+          <div id="origin-legend" style="flex:0 1 240px;font-size:11.5px;line-height:1.7;color:#444;padding-top:6px"></div>
+        </div>
+      </div>
       <div class="spain-card"><h3>Cases Filed per Year</h3><div class="chart-wrap"><canvas id="chart-byyear"></canvas></div></div>
       <div class="spain-card"><h3>Compensation Claimed vs. Awarded (USD millions)</h3><div class="chart-wrap"><canvas id="chart-amounts"></canvas></div></div>
       <div class="spain-card spain-card-wide">
@@ -1298,12 +1316,6 @@ function aggregateForViz(rows) {
   for (const r of rows) { const s = r.status || "Unknown"; outcomeCounts[s] = (outcomeCounts[s] || 0) + 1; }
   const outcomes = Object.entries(outcomeCounts).sort((a,b) => b[1]-a[1]).map(([label,count]) => ({label,count}));
 
-  const stateCounts = {};
-  for (const r of rows)
-    for (const c of (r.home_state || "").split(/[;\n]+/).map(x => x.trim()).filter(Boolean))
-      stateCounts[c] = (stateCounts[c] || 0) + 1;
-  const homeStates = Object.entries(stateCounts).sort((a,b) => b[1]-a[1]).map(([country,count]) => ({country,count}));
-
   const OK = { "Decided in favour of investor":"investor","Decided in favour of State":"state","Pending":"pending","Discontinued for unknown reasons":"discontinued" };
   const ym = {};
   for (const r of rows) {
@@ -1324,7 +1336,7 @@ function aggregateForViz(rows) {
     .filter(a => a.claimed_usd !== null)
     .sort((a,b) => (b.claimed_usd||0)-(a.claimed_usd||0));
 
-  return { total: rows.length, outcomes, homeStates, byYear, amounts };
+  return { total: rows.length, outcomes, byYear, amounts };
 }
 
 function renderViz() {
@@ -1336,7 +1348,7 @@ function renderViz() {
   const ab = document.getElementById("preset-" + vizActivePreset);
   if (ab) ab.classList.add("active");
   renderOutcomes(agg.outcomes);
-  renderHomeStates(agg.homeStates);
+  renderOriginRings(vizRows);
   renderByYear(agg.byYear);
   renderAmounts(agg.amounts);
   renderAlluvial();
@@ -1485,17 +1497,250 @@ function renderOutcomes(outcomes) {
   });
 }
 
-function renderHomeStates(homeStates) {
-  const top = homeStates.slice(0, 14);
-  vizCharts.homeStates = new Chart(document.getElementById("chart-homestates"), {
-    type: "bar",
-    data: { labels: top.map(s => s.country), datasets: [{ data: top.map(s => s.count), backgroundColor: "#4a9eda", borderRadius: 3 }] },
+// --- Investors' country of origin: two-level pie (registration vs. ultimate ownership) ---
+
+// Ultimate economic-owner nationality, keyed by case number.
+// Source: ECT_Spain_Claims_Ultimate_Ownership.md. Cases not listed => unknown (gray).
+const ULT_OWNER = {
+  821: "Spain",                 // Charanne — round-tripping (Isolux/Alonso bros.)
+  722: "United States",         // NextEra — Florida utility via Dutch shells
+  720: "United Arab Emirates",  // Masdar — Mubadala (Abu Dhabi)
+  774: "France",                // Infrastructure Services / Antin — Paris PE
+  763: "United Kingdom",        // Eiser — London infra fund
+  916: "Diversified",           // The PV Investors — 26-investor consortium
+  729: "Germany",               // RWE Innogy
+  672: "Germany",               // Stadtwerke München (City of Munich)
+  597: "United Kingdom",        // 9REN — First State Investments (UK/AUS)
+  656: "Portugal",              // Novenergia — Portuguese capital, later Total Eren (FR)
+  620: "France",                // Cube — Paris infra managers
+  610: "Germany",               // BayWa r.e.
+  639: "Japan",                 // JGC
+  657: "United Kingdom",        // OperaFund — London PE via Malta
+  678: "United Kingdom",        // Watkins — UK infra via Luxembourg
+};
+
+const ORIGIN_BASE_COLORS = {
+  "Spain": "#d62728", "United States": "#1f77b4", "United Arab Emirates": "#2ca02c",
+  "France": "#9467bd", "United Kingdom": "#ff7f0e", "Germany": "#8c564b",
+  "Japan": "#e377c2", "Portugal": "#17becf", "Italy": "#bcbd22",
+  "Netherlands": "#3b82f6", "Luxembourg": "#10b981", "Malta": "#f59e0b",
+  "Switzerland": "#0ea5e9", "Diversified": "#6366f1", "Belgium": "#7c3aed",
+  "Denmark": "#84cc16", "Ireland": "#22c55e", "Sweden": "#eab308",
+  "Panama": "#a855f7", "Mexico": "#14b8a6", "Argentina": "#f97316",
+  "Venezuela, Bolivarian": "#fb7185",
+};
+const ORIGIN_FALLBACK = ["#64748b", "#b45309", "#be185d", "#0f766e", "#4338ca", "#9f1239"];
+const ORIGIN_UNKNOWN = "#b4b8c0";
+
+function originBaseColor(country) {
+  if (!country) return ORIGIN_UNKNOWN;
+  if (ORIGIN_BASE_COLORS[country]) return ORIGIN_BASE_COLORS[country];
+  let h = 0; for (const ch of country) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return ORIGIN_FALLBACK[h % ORIGIN_FALLBACK.length];
+}
+function shadeColor(hex, pct) { // pct in [-1,1]; positive lightens, negative darkens
+  if (hex[0] !== "#") return hex;
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const t = pct < 0 ? 0 : 255, p = Math.abs(pct);
+  r = Math.round((t - r) * p) + r; g = Math.round((t - g) * p) + g; b = Math.round((t - b) * p) + b;
+  return `rgb(${r},${g},${b})`;
+}
+// Two shades per country so adjacent same-country cases are distinguishable.
+function originShade(base, occ) { return occ % 2 === 0 ? shadeColor(base, 0.24) : shadeColor(base, -0.12); }
+
+const primaryCountry = s => (s || "").split(/[;\n\/]+/).map(x => x.trim()).filter(Boolean)[0] || "";
+
+let originShowClaimed = false; // toggle: state-won/dropped cases sized at €0 (false) or claimed (true)
+
+const ORIGIN_STATUS_SHORT = {
+  "Decided in favour of investor": "Investor won",
+  "Decided in favour of State": "Spain won",
+  "Pending": "Pending",
+  "Discontinued for unknown reasons": "Discontinued",
+};
+
+function originCaseAmount(r) {
+  const claimed = parseUSD(r.amount_claimed_m);
+  const awarded = parseUSD(r.amount_awarded_m);
+  const st = r.status;
+  if (st === "Decided in favour of investor") return { amt: awarded ?? claimed ?? 0, kind: "Awarded" };
+  if (st === "Pending") return { amt: claimed ?? 0, kind: "Claimed" };
+  // Spain won / discontinued / other: actual recovery is €0; toggle shows amount at stake.
+  return { amt: originShowClaimed ? (claimed ?? 0) : 0, kind: originShowClaimed ? "Claimed (at stake)" : "Recovered" };
+}
+
+function buildOriginCases(rows) {
+  const list = [];
+  for (const r of rows) {
+    const { amt, kind } = originCaseAmount(r);
+    if (!(amt > 0)) continue;
+    const origin = primaryCountry(r.home_state) || "Unknown";
+    const owner = ULT_OWNER[r.no] || null;
+    list.push({
+      no: r.no, name: r.short_name, origin, originRaw: r.home_state,
+      owner, amount: amt, amountKind: kind,
+      statusShort: ORIGIN_STATUS_SHORT[r.status] || r.status || "—",
+    });
+  }
+  // Group by origin (inner ring); order groups by total amount, cases within group by amount.
+  const totals = {};
+  for (const c of list) totals[c.origin] = (totals[c.origin] || 0) + c.amount;
+  list.sort((a, b) =>
+    (totals[b.origin] - totals[a.origin]) ||
+    (a.origin < b.origin ? -1 : a.origin > b.origin ? 1 : 0) ||
+    (b.amount - a.amount)
+  );
+  return list;
+}
+
+function renderOriginRings(rows) {
+  const canvas = document.getElementById("chart-origin-rings");
+  if (!canvas) return;
+  const cases = buildOriginCases(rows);
+  const data = cases.map(c => c.amount);
+
+  // Inner ring: country of incorporation. Outer ring: ultimate owner (gray = unknown).
+  const innerOcc = {}, outerOcc = {};
+  const innerColors = [], outerColors = [];
+  for (const c of cases) {
+    const io = (innerOcc[c.origin] = (innerOcc[c.origin] || 0) + 1) - 1;
+    innerColors.push(originShade(originBaseColor(c.origin), io));
+    if (c.owner) {
+      const oo = (outerOcc[c.owner] = (outerOcc[c.owner] || 0) + 1) - 1;
+      outerColors.push(originShade(originBaseColor(c.owner), oo));
+    } else {
+      const oo = (outerOcc.__unk = (outerOcc.__unk || 0) + 1) - 1;
+      outerColors.push(originShade(ORIGIN_UNKNOWN, oo));
+    }
+  }
+
+  const fmt = n => "$" + Math.round(n).toLocaleString() + "M";
+
+  vizCharts.originRings = new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: cases.map(c => c.name),
+      datasets: [
+        { label: "Ultimate economic owner", data, backgroundColor: outerColors,
+          borderColor: "#fff", borderWidth: 1, weight: 1, hoverOffset: 14 },
+        { label: "Country of incorporation", data, backgroundColor: innerColors,
+          borderColor: "#fff", borderWidth: 1, weight: 1.4, hoverOffset: 14 },
+      ],
+    },
     options: {
-      indexAxis: "y", responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { font: { size: 12 } } } },
+      responsive: true, maintainAspectRatio: false,
+      cutout: "30%",
+      interaction: { mode: "index", intersect: true }, // links inner+outer wedge of same case
+      onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+      onClick: (e, els) => {
+        if (!els.length) return;
+        const c = cases[els[0].index];
+        if (c && c.no != null) showDetail(c.no);
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          filter: item => item.datasetIndex === 0, // one combined block per case
+          callbacks: {
+            title: items => cases[items[0].dataIndex]?.name ?? "",
+            label: ctx => {
+              const c = cases[ctx.dataIndex]; if (!c) return "";
+              return [
+                ` Registered in: ${c.origin}`,
+                ` Ultimate owner: ${c.owner || "Unknown / undisclosed"}`,
+                ` ${c.amountKind}: ${fmt(c.amount)}`,
+                ` Outcome: ${c.statusShort}`,
+              ];
+            },
+          },
+        },
+      },
     },
   });
+
+  addOriginRingsTouchHandlers(vizCharts.originRings, cases);
+  renderOriginLegend(cases);
+}
+
+// Mobile touch: tap = tooltip, long-press (600ms) = open case detail
+function addOriginRingsTouchHandlers(chart, cases) {
+  const canvas = chart.canvas;
+  let lpTimer = null, startPos = null, consumed = false;
+
+  function clearLP() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }
+
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { clearLP(); return; }
+    consumed = false;
+    const t = e.touches[0];
+    startPos = { x: t.clientX, y: t.clientY };
+    clearLP();
+    lpTimer = setTimeout(() => {
+      consumed = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = startPos.x - rect.left, y = startPos.y - rect.top;
+      const els = chart.getElementsAtEventForMode({ offsetX: x, offsetY: y }, 'index', { intersect: true }, true);
+      if (els.length) {
+        const c = cases[els[0].index];
+        if (c && c.no != null) showDetail(c.no);
+      }
+    }, 600);
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', e => {
+    if (!startPos) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - startPos.x) > 8 || Math.abs(t.clientY - startPos.y) > 8) clearLP();
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', e => {
+    clearLP();
+    if (consumed) return; // long-press already handled
+    // Short tap: activate tooltip at touch point
+    const rect = canvas.getBoundingClientRect();
+    const t = e.changedTouches[0];
+    const x = t.clientX - rect.left, y = t.clientY - rect.top;
+    const els = chart.getElementsAtEventForMode({ offsetX: x, offsetY: y }, 'index', { intersect: true }, true);
+    if (els.length) {
+      chart.tooltip.setActiveElements(
+        chart.data.datasets.map((_, di) => ({ datasetIndex: di, index: els[0].index })),
+        { x, y }
+      );
+    } else {
+      chart.tooltip.setActiveElements([], {});
+    }
+    chart.update('none');
+  });
+}
+
+function renderOriginLegend(cases) {
+  const el = document.getElementById("origin-legend");
+  if (!el) return;
+  const inner = new Set(), outer = new Set();
+  let hasUnknown = false;
+  for (const c of cases) {
+    inner.add(c.origin);
+    if (c.owner) outer.add(c.owner); else hasUnknown = true;
+  }
+  const chip = country =>
+    `<span style="display:inline-block;width:11px;height:11px;border-radius:2px;background:${originBaseColor(country)};margin-right:6px;vertical-align:-1px"></span>${esc(country)}`;
+  const union = Array.from(new Set([...inner, ...outer])).sort();
+  el.innerHTML =
+    `<div style="font-weight:700;color:#1a3a5c;margin-bottom:4px">Countries</div>` +
+    union.map(c => `<div>${chip(c)}</div>`).join("") +
+    (hasUnknown ? `<div><span style="display:inline-block;width:11px;height:11px;border-radius:2px;background:${ORIGIN_UNKNOWN};margin-right:6px;vertical-align:-1px"></span>Unknown owner</div>` : "") +
+    `<div style="margin-top:8px;color:#888;font-size:10.5px;line-height:1.55">Inner = ultimate owner · outer = incorporation. Two shades = separate cases of the same country. Wedge size = award (investor wins) or claim (pending). ${cases.length} case${cases.length === 1 ? "" : "s"} with a known amount shown. On mobile: tap = tooltip · long-press = case detail.</div>`;
+}
+
+function toggleOriginAmounts(el) {
+  originShowClaimed = el.checked;
+  document.getElementById("origin-tog-off").style.color = originShowClaimed ? "#999" : "#333";
+  document.getElementById("origin-tog-off").style.fontWeight = originShowClaimed ? "400" : "600";
+  document.getElementById("origin-tog-on").style.color = originShowClaimed ? "#333" : "#999";
+  document.getElementById("origin-tog-on").style.fontWeight = originShowClaimed ? "600" : "400";
+  if (vizCharts.originRings) { try { vizCharts.originRings.destroy(); } catch (_) {} }
+  renderOriginRings(vizRows);
 }
 
 function renderByYear(byYear) {
