@@ -2111,27 +2111,30 @@ function computeAlluvialYW(cases, year, scale, ribbonBottom, zeroY) {
   const pos = {};
 
   // Bottom zone: hairlines stacked downward from zeroY toward ribbonBottom
-  let yBot = zeroY + 2; // start just below the zero line
+  let yBot = zeroY + 2;
   for (const k of ALLUVIAL_W_BOT) {
     const grp = groups[k];
     for (const c of grp) {
-      pos[c.no] = { y: yBot, h: 1, state: k }; yBot += 2;
+      pos[c.no] = { y: yBot, h: 1, state: k, shade: c.isNonEU ? 'dd' : '88' }; yBot += 2;
     }
     if (grp.length) yBot += 2;
   }
 
-  // Top zone: amount-proportional ribbons stacked upward from zeroY
+  // Top zone: amount-proportional ribbons stacked upward from zeroY, no inter-flow gap
   let yTop = zeroY;
   for (const k of ALLUVIAL_W_TOP) {
     const grp = groups[k];
-    let lastWasEU = true;
+    let euIdx = 0, nonEuIdx = 0;
     for (const c of grp) {
-      if (lastWasEU && c.isNonEU) yTop -= 2;
-      lastWasEU = !c.isNonEU;
       const h = ribbonHW(c, year, scale);
-      yTop -= h; pos[c.no] = { y: yTop, h, state: k }; yTop -= 1;
+      const idx = c.isNonEU ? nonEuIdx++ : euIdx++;
+      // 4 normal shades: EU alternates aa/88, non-EU alternates ff/cc
+      const shade = c.isNonEU ? (idx % 2 === 0 ? 'ff' : 'cc') : (idx % 2 === 0 ? 'aa' : '88');
+      yTop -= h;
+      pos[c.no] = { y: yTop, h, state: k, shade };
+      // no inter-flow gap — alternating shades make individual flows visible
     }
-    if (grp.length) yTop -= 3;
+    if (grp.length) yTop -= 3; // small gap between categories only
   }
 
   return { pos, groups };
@@ -2259,13 +2262,14 @@ function renderAlluvial() {
       if (!p0 && !p1) continue;
       if (!p0 && p1) {
         // Case born — entry tick at left edge of its first active segment
-        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (c.isNonEU ? 'ee' : '99');
+        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (hoveredCaseNo != null ? '28' : (c.isNonEU ? 'ee' : '99'));
         ctx.fillRect(x1, p1.y, 3, ribbonH);
         continue;
       }
       if (p0 && !p1) continue;
-      // Non-EU investors: full opacity (vivid); EU investors: lighter shade
-      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (c.isNonEU ? 'ff' : 'aa');
+      // Dim all ribbons when hovering so hovered one pops at full brightness
+      const alpha = hoveredCaseNo != null ? '28' : (c.isNonEU ? 'ff' : 'aa');
+      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + alpha;
       ctx.beginPath();
       ctx.moveTo(x0, p0.y);
       ctx.bezierCurveTo(cpx, p0.y, cpx, p1.y, x1, p1.y);
@@ -2287,13 +2291,13 @@ function renderAlluvial() {
         const p0 = alluvialPosMap[yr0]?.pos[hc.no], p1 = alluvialPosMap[yr1]?.pos[hc.no];
         if (!p0 || !p1) continue;
         const col = ALLUVIAL_COLORS[p1.state] ?? '#ccc';
-        ctx.fillStyle = col + '44';
+        ctx.fillStyle = col + '55';
         ctx.beginPath();
         ctx.moveTo(x0, p0.y - GLOW); ctx.bezierCurveTo(cpx, p0.y - GLOW, cpx, p1.y - GLOW, x1, p1.y - GLOW);
         ctx.lineTo(x1, p1.y + ribbonH + GLOW);
         ctx.bezierCurveTo(cpx, p0.y + ribbonH + GLOW, cpx, p0.y + ribbonH + GLOW, x0, p0.y + ribbonH + GLOW);
         ctx.closePath(); ctx.fill();
-        ctx.fillStyle = col + (hc.isNonEU ? 'ff' : 'dd');
+        ctx.fillStyle = col + 'ff';
         ctx.beginPath();
         ctx.moveTo(x0, p0.y); ctx.bezierCurveTo(cpx, p0.y, cpx, p1.y, x1, p1.y);
         ctx.lineTo(x1, p1.y + ribbonH);
@@ -2398,7 +2402,7 @@ function renderAlluvialWeighted() {
     for (const c of alluvialCases) { const st = getCaseStateAt(c, yr); if (st && tmp[st]) tmp[st].push(c); }
     for (const k of ALLUVIAL_W_TOP) {
       if (!tmp[k].length) continue;
-      for (const c of tmp[k]) sh += ribbonHW(c, yr, 1) + 1;
+      for (const c of tmp[k]) sh += ribbonHW(c, yr, 1);
       sh += 3;
     }
     maxTopH = Math.max(maxTopH, sh);
@@ -2513,12 +2517,13 @@ function renderAlluvialWeighted() {
       const p0 = pos0[c.no], p1 = pos1[c.no];
       if (!p0 && !p1) continue;
       if (!p0 && p1) {
-        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (c.isNonEU ? 'ee' : '99');
+        ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (hoveredCaseNo != null ? '28' : (p1.shade ?? (c.isNonEU ? 'ee' : '99')));
         ctx.fillRect(x1, p1.y, 3, p1.h); continue;
       }
       if (p0 && !p1) continue;
       const h0 = p0.h, h1 = p1.h;
-      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + (c.isNonEU ? 'ff' : 'aa');
+      const alpha = hoveredCaseNo != null ? '28' : (p1.shade ?? (c.isNonEU ? 'ff' : 'aa'));
+      ctx.fillStyle = (ALLUVIAL_COLORS[p1.state] ?? '#ccc') + alpha;
       ctx.beginPath();
       ctx.moveTo(x0, p0.y); ctx.bezierCurveTo(cpx, p0.y, cpx, p1.y, x1, p1.y);
       ctx.lineTo(x1, p1.y + h1);
@@ -2539,13 +2544,13 @@ function renderAlluvialWeighted() {
         if (!p0 || !p1) continue;
         const col = ALLUVIAL_COLORS[p1.state] ?? '#ccc';
         const h0 = p0.h, h1 = p1.h;
-        ctx.fillStyle = col + '44';
+        ctx.fillStyle = col + '55';
         ctx.beginPath();
         ctx.moveTo(x0, p0.y - GLOW); ctx.bezierCurveTo(cpx, p0.y - GLOW, cpx, p1.y - GLOW, x1, p1.y - GLOW);
         ctx.lineTo(x1, p1.y + h1 + GLOW);
         ctx.bezierCurveTo(cpx, p1.y + h1 + GLOW, cpx, p0.y + h0 + GLOW, x0, p0.y + h0 + GLOW);
         ctx.closePath(); ctx.fill();
-        ctx.fillStyle = col + (hc.isNonEU ? 'ff' : 'dd');
+        ctx.fillStyle = col + 'ff';
         ctx.beginPath();
         ctx.moveTo(x0, p0.y); ctx.bezierCurveTo(cpx, p0.y, cpx, p1.y, x1, p1.y);
         ctx.lineTo(x1, p1.y + h1);
