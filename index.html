@@ -708,9 +708,9 @@
     <button onclick="search(1)">Search</button>
   </div>
   <nav id="tab-nav">
-    <button class="tab-btn active" data-tab="browse" onclick="switchTab('browse')">Browse</button>
+    <button class="tab-btn" data-tab="browse" onclick="switchTab('browse')">Browse</button>
     <button class="tab-btn" data-tab="sql" onclick="switchTab('sql')">SQL</button>
-    <button class="tab-btn" data-tab="viz" onclick="switchTab('viz')">Visualizations</button>
+    <button class="tab-btn active" data-tab="viz" onclick="switchTab('viz')">Visualizations</button>
     <button class="tab-btn" data-tab="guide" onclick="switchTab('guide')">Guide</button>
     <button class="tab-btn" data-tab="workflow" onclick="switchTab('workflow')">Case Browser</button>
   </nav>
@@ -765,6 +765,11 @@
       <div class="spain-card spain-card-wide">
         <h3>Spain ECT Case Flow — Claim &amp; Award Scale <span class="card-sub">— ribbon thickness ∝ claimed amount before decision → shrinks to award · 1 px hairline if Spain wins, blocked, or discontinued · hover for amounts</span></h3>
         <div class="chart-wrap-alluvial"><canvas id="chart-alluvial-w" style="width:100%;height:100%;display:block"></canvas></div>
+      </div>
+      <div class="spain-card spain-card-wide">
+        <h3>Spain Solar PV: Private Investment vs Government Support Cost <span class="card-sub">— bars: new-build capex (annual additions × IRENA cost benchmarks) · line: FiT/specific remuneration cost · filled dots = confirmed sources · open dots = estimated</span></h3>
+        <div class="timeline-event-legend" id="econ-event-legend"></div>
+        <div class="chart-wrap-wide"><canvas id="chart-econ"></canvas></div>
       </div>
       <div class="spain-card"><h3>Case Outcomes</h3><div class="chart-wrap"><canvas id="chart-outcomes"></canvas></div></div>
       <div class="spain-card"><h3>Investors' Countries of Origin</h3><div class="chart-wrap-tall"><canvas id="chart-homestates"></canvas></div></div>
@@ -1336,6 +1341,7 @@ function renderViz() {
   renderAmounts(agg.amounts);
   renderAlluvial();
   renderAlluvialWeighted();
+  renderEconChart();
   renderGantt();
 }
 
@@ -1567,6 +1573,138 @@ function renderAmounts(amounts) {
 // --- Timeline & Gantt charts ---
 
 const EVENT_COLORS = { incentive: "#10b981", cut: "#ef4444", eu_law: "#8b5cf6", ect: "#f59e0b" };
+
+function renderEconChart() {
+  const canvas = document.getElementById("chart-econ");
+  if (!canvas || !timelineData) return;
+
+  const ALL_YEARS = Array.from({ length: 22 }, (_, i) => String(2005 + i));
+
+  const invMap = {};
+  for (const d of (timelineData.pv_investment_bn_eur || []))
+    invMap[String(d.year)] = d.value;
+
+  const subMap = {}, subConfirmed = {};
+  for (const d of (timelineData.pv_subsidy_bn_eur || [])) {
+    subMap[String(d.year)] = d.value;
+    subConfirmed[String(d.year)] = d.confirmed;
+  }
+
+  const capMap = {};
+  for (const c of timelineData.capacity) capMap[String(c.year)] = +(c.solar_pv_mw / 1000).toFixed(2);
+
+  const evtByYear = {};
+  for (const ev of timelineData.events) {
+    const yr = String(parseInt(ev.date.slice(0, 4)));
+    if (!evtByYear[yr]) evtByYear[yr] = { labels: [], color: EVENT_COLORS[ev.category] ?? "#aaa" };
+    evtByYear[yr].labels.push(ev.label);
+  }
+  const pluginEvents = Object.entries(evtByYear).map(([yr, v]) => ({ xLabel: yr, color: v.color }));
+
+  const pointBg = ALL_YEARS.map(y =>
+    subMap[y] !== undefined ? (subConfirmed[y] ? '#ef4444' : 'transparent') : 'transparent'
+  );
+  const pointBorder = ALL_YEARS.map(y => subMap[y] !== undefined ? '#ef4444' : 'transparent');
+  const pointRadius = ALL_YEARS.map(y => subMap[y] !== undefined ? 4 : 0);
+
+  // Build event legend
+  const legend = document.getElementById("econ-event-legend");
+  if (legend && !legend.childElementCount) {
+    const cats = { incentive: "Incentive", cut: "Policy cut", eu_law: "EU law ruling", ect: "ECT event" };
+    legend.innerHTML = Object.entries(cats).map(([k, label]) =>
+      `<span><span style="display:inline-block;width:18px;height:2px;background:${EVENT_COLORS[k]};vertical-align:middle;margin-right:4px"></span>${label}</span>`
+    ).join('');
+  }
+
+  vizCharts.econ = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: ALL_YEARS,
+      datasets: [
+        {
+          type: "bar",
+          label: "Private PV investment (est., B€)",
+          data: ALL_YEARS.map(y => invMap[y] ?? null),
+          backgroundColor: "rgba(59,130,246,0.65)",
+          borderColor: "rgba(59,130,246,0.85)",
+          borderWidth: 1,
+          yAxisID: "yEcon",
+          order: 2,
+        },
+        {
+          type: "line",
+          label: "Govt solar support cost (B€)",
+          data: ALL_YEARS.map(y => subMap[y] ?? null),
+          borderColor: "#ef4444",
+          backgroundColor: "rgba(239,68,68,0.08)",
+          fill: true,
+          tension: 0.35,
+          pointRadius,
+          pointBackgroundColor: pointBg,
+          pointBorderColor: pointBorder,
+          pointBorderWidth: 1.5,
+          yAxisID: "yEcon",
+          order: 1,
+          spanGaps: true,
+        },
+        {
+          type: "line",
+          label: "Solar PV installed (GW)",
+          data: ALL_YEARS.map(y => capMap[y] ?? null),
+          borderColor: "#f59e0b",
+          backgroundColor: "rgba(245,158,11,0.06)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2,
+          yAxisID: "yGW",
+          order: 3,
+          spanGaps: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 }, boxWidth: 12, padding: 12 } },
+        tooltip: {
+          callbacks: {
+            afterBody(items) {
+              const yr = items[0]?.label;
+              const evts = evtByYear[yr];
+              const lines = evts ? evts.labels.map(l => "  • " + l) : [];
+              if (invMap[yr] != null) lines.push("  Investment: €" + invMap[yr].toFixed(2) + "B (est.)");
+              if (subMap[yr] != null) lines.push("  Support cost: €" + subMap[yr].toFixed(2) + "B" + (subConfirmed[yr] ? " ✓" : " (est.)"));
+              return lines;
+            },
+          },
+        },
+        timelineEvents: { events: pluginEvents },
+      },
+      scales: {
+        x: { ticks: { font: { size: 11 } } },
+        yEcon: {
+          type: "linear",
+          position: "left",
+          min: -1,
+          title: { display: true, text: "Billion EUR", font: { size: 11 } },
+          ticks: { callback: v => "€" + v.toFixed(0) + "B" },
+          grid: {
+            color: ctx => ctx.tick.value === 0 ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.04)",
+          },
+        },
+        yGW: {
+          type: "linear",
+          position: "right",
+          beginAtZero: true,
+          title: { display: true, text: "PV installed (GW)", font: { size: 11 } },
+          grid: { drawOnChartArea: false },
+          ticks: { callback: v => v + " GW" },
+        },
+      },
+    },
+  });
+}
 
 Chart.register({
   id: "timelineEvents",
@@ -2307,7 +2445,7 @@ function renderAlluvialWeighted() {
 
   // --- Right USD axis (above zero only) ---
   const maxDisplayM = topZoneH / scale;
-  const usdStep = maxDisplayM > 8000 ? 5000 : maxDisplayM > 3000 ? 2000 : maxDisplayM > 1000 ? 500 : 200;
+  const usdStep = maxDisplayM > 8000 ? 2000 : maxDisplayM > 4000 ? 1000 : maxDisplayM > 1500 ? 500 : maxDisplayM > 400 ? 200 : 100;
   ctx.textAlign = 'left'; ctx.font = '9px system-ui,sans-serif'; ctx.fillStyle = '#666';
   for (let m = 0; m <= maxDisplayM + usdStep * 0.1; m += usdStep) {
     const ay = Math.round(ZERO_Y - m * scale);
@@ -2883,6 +3021,7 @@ document.getElementById("q").addEventListener("keydown", e => {
   loadFacets();
   search(1);
   loadEnforcementIndex();
+  switchTab('viz');
 })();
 </script>
 </body>
