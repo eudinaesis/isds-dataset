@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!--
+  query_db.html — Developer debug scratchpad for isds.db
+  ========================================================
+  PURPOSE:
+    A lightweight in-browser SQL runner that loads isds.db (the SQLite database
+    powering index.html) and runs diagnostic computations against it. Outputs
+    results as JSON to the page. Useful for:
+
+      • Cross-checking values displayed in index.html's charts against raw DB data
+      • Iterating on case-state logic (getCaseStateAt, extractDecisionYear, parseUSD)
+        before integrating into the main app
+      • Producing per-year ISDS liability totals to compare against Chart 2's
+        ribbon-width sums and Chart 3's liabilityMap line
+      • Ad-hoc SQL queries against cases, research_notes, enforcement_proceedings
+
+    Currently configured to compute the per-year cumulative at-risk ISDS exposure
+    (sum of claim/award amounts for all pending + investor-won + enforced + paid
+    Spain ECT cases at each year, in EUR billions), mirroring the ribbonHW() logic
+    used in the weighted alluvial chart (Chart 2) and the liabilityMap computed in
+    renderEconChart() (Chart 3).
+
+  USAGE:
+    Serve the isds-dataset/ directory locally (e.g. via `python3 -m http.server 8123`)
+    and open http://localhost:8123/query_db.html in a browser. The result appears
+    as JSON text in the page body. Edit the script block below to run different queries.
+
+  NOTE:
+    This file is NOT linked from index.html and is not part of the published app.
+    It exists purely as a developer tool. The SQL library (fts5-sql-bundle) is the
+    same one used by index.html, so behaviour should be identical.
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>query_db.html — ISDS DB debug scratchpad</title>
+  <style>
+    body { font-family: monospace; background: #0f1117; color: #e2e8f0; padding: 24px; }
+    h2 { color: #8b5cf6; margin: 0 0 4px; }
+    p.desc { color: #94a3b8; margin: 0 0 16px; font-size: 13px; }
+    pre { background: #1e293b; padding: 16px; border-radius: 8px; overflow: auto; font-size: 13px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/fts5-sql-bundle/dist/sql-wasm.js"></script>
+</head>
+<body>
+  <h2>query_db.html — Developer debug scratchpad</h2>
+  <p class="desc">
+    Loads <code>isds.db</code> and computes per-year at-risk ISDS exposure (EUR bn),
+    mirroring the <code>ribbonHW()</code> + <code>liabilityMap</code> logic in
+    <code>index.html</code>. Edit the script block to run different queries.
+  </p>
+  <pre id="output">Loading isds.db and computing…</pre>
+
+  <script>
+    (async () => {
+      try {
+        const SQL = await initSqlJs({
+          locateFile: f => `https://cdn.jsdelivr.net/npm/fts5-sql-bundle/dist/${f}`
+        });
+        const buf = await fetch("isds.db").then(r => r.arrayBuffer());
+        const db = new SQL.Database(new Uint8Array(buf));
+
+        // ── Fetch Spain ECT cases with enforcement info ────────────────────────
+        const rows = db.exec(`
+          SELECT c.no, c.short_name, c.year, c.status, c.decisions,
+                 c.amount_claimed_m, c.amount_awarded_m, rn.enforcement_status
+          FROM cases c LEFT JOIN research_notes rn ON c.no = rn.case_no
+          WHERE c.respondent_state LIKE '%Spain%'
+        `);
+        const columns = rows[0].columns;
+        const cases = rows[0].values.map(val => {
+          const r = {};
+          columns.forEach((col, i) => r[col] = val[i]);
+          return r;
+        });
+
+        // Earliest enforcement proceeding date per case
+        const enfRows = db.exec(
+          "SELECT case_no, date_text FROM enforcement_proceedings ORDER BY id"
+        );
+        const enfMap = {};
+        if (enfRows.length) {
+          for (const [caseNo, dateText] of enfRows[0].values)
+            if (!enfMap[caseNo]) enfMap[caseNo] = dateText;
+        }
+
+        // ── Helpers (mirroring index.html) ─────────────────────────────────────
+
+        function parseUSD(s) {
+          if (!s || s.includes("Data not available")) return null;
+          let m = s.match(/\(([\d,]+(?:\.\d+)?)\s+USD\)/i);
+          if (m) return parseFloat(m[1].replace(/,/g, ''));
+          m = s.match(/^([\d,]+(?:\.\d+)?)\s+USD/i);
+          return m ? parseFloat(m[1].replace(/,/g, '')) : null;
+        }
+
+        function extractDecisionYear(decisions, status) {
+          if (!decisions || status === 'Pending') return null;
+          let m = decisions.match(/(?:Final\s+)?Award\s+dated[^;]*?\b(20\d{2})\b/i);
+          if (m) return parseInt(m[1]);
+          m = decisions.match(/discontinuance[^;]*?\b(20\d{2})\b/i);
+          if (m) return parseInt(m[1]);
+          const all = [...decisions.matchAll(/\b(20\d{2})\b/g)].map(x => parseInt(x[1]));
+          return all.length ? Math.max(...all) : null;
+        }
+
+        function parseEnfDate(s) {
+          if (!s) return null;
+          const m = s.match(/\b(20\d{2})\b/);
+          return m ? parseInt(m[1]) : null;
+        }
+
+        const ALLUVIAL_YEAR_START = 2006;
+        const ALLUVIAL_YEAR_END   = 2026;
+        const ALLUVIAL_W_TOP = ['pending', 'not_paid', 'enforced', 'paid'];
+
+        const alluvialCases = cases.map(r => {
+          const isMaffezini = r.no === 1318;
+          const yearFiled = isMaffezini ? ALLUVIAL_YEAR_START : (r.year ?? ALLUVIAL_YEAR_START);
+          let yearDecided = isMaffezini ? ALLUVIAL_YEAR_START : extractDecisionYear(r.decisions, r.status);
+          if (yearDecided == null && r.status !== 'Pending') yearDecided = yearFiled + 3;
+          const enfRaw = enfMap[r.no];
+          const yearEnf = isMaffezini ? ALLUVIAL_YEAR_START : (enfRaw ? parseEnfDate(enfRaw) : null);
+          return {
+            no: r.no, name: r.short_name,
+            yearFiled, yearDecided, yearEnf,
+            status: r.status,
+            enfStatus: r.enforcement_status || 'not_paid',
+            claimM: parseUSD(r.amount_claimed_m),
+            awardM: parseUSD(r.amount_awarded_m),
+          };
+        });
+
+        function getCaseStateAt(c, year) {
+          if (year < c.yearFiled) return null;
+          if (c.yearDecided != null && year >= c.yearDecided) {
+            const s = c.status;
+            if (s === 'Decided in favour of investor') {
+              if (c.yearEnf != null && year >= c.yearEnf) return c.enfStatus;
+              return 'not_paid';
+            }
+            if (s === 'Decided in favour of State') return 'state_won';
+            if (s === 'Discontinued for unknown reasons') return 'discontinued';
+            return 'pending';
+          }
+          return 'pending';
+        }
+
+        // ── Compute per-year at-risk ISDS exposure ────────────────────────────
+        // Mirrors renderEconChart()'s liabilityMap and Chart 2's ribbonHW(c, yr, 1)
+        const ALL_YEARS = Array.from({ length: 22 }, (_, i) => ALLUVIAL_YEAR_START + i);
+        const result = [];
+
+        for (const yr of ALL_YEARS) {
+          let totalUSD = 0;
+          for (const c of alluvialCases) {
+            const st = getCaseStateAt(c, yr);
+            if (st && ALLUVIAL_W_TOP.includes(st)) {
+              const amtM = (c.status === 'Decided in favour of investor')
+                ? (c.awardM ?? c.claimM ?? 50)
+                : (c.claimM ?? 50);
+              totalUSD += Math.max(1, amtM); // same floor as ribbonHW()
+            }
+          }
+          result.push({
+            year: yr,
+            value_eur_bn: +(totalUSD / 1100).toFixed(3),
+            total_usd_m: Math.round(totalUSD),
+          });
+        }
+
+        document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+      } catch (e) {
+        document.getElementById("output").textContent = "Error: " + e.message + "\n" + e.stack;
+      }
+    })();
+  </script>
+</body>
+</html>
