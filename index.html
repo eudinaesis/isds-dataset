@@ -1877,15 +1877,16 @@ function renderEconChart() {
     let totalUSD = 0;
     for (const c of alluvialCases) {
       const st = getCaseStateAt(c, yr);
-      if (st && ['pending', 'not_paid', 'enforced', 'paid'].includes(st)) {
+      if (st && ALLUVIAL_W_TOP.includes(st)) {
+        // Mirror ribbonHW exactly: investor-win cases use award, all others use claim
         const amtM = (c.status === 'Decided in favour of investor')
           ? (c.awardM ?? c.claimM ?? 50)
           : (c.claimM ?? 50);
-        totalUSD += amtM;
+        totalUSD += Math.max(1, amtM); // same floor as ribbonHW
       }
     }
-    // Convert from USD Millions to EUR Billions (1 EUR = 1.1 USD)
-    liabilityMap[yStr] = totalUSD / 1100;
+    // Convert USD millions → EUR billions (1 EUR ≈ 1.1 USD)
+    liabilityMap[yStr] = +(totalUSD / 1100).toFixed(3);
   }
 
   const evtByYear = {};
