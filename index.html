@@ -1866,6 +1866,28 @@ function renderEconChart() {
   const capMap = {};
   for (const c of timelineData.capacity) capMap[String(c.year)] = +(c.solar_pv_mw / 1000).toFixed(2);
 
+  const gdpMap = {};
+  for (const d of (timelineData.spain_gdp_half_percent_bn_eur || []))
+    gdpMap[String(d.year)] = d.value;
+
+  const liabilityMap = {};
+  if (!alluvialCases) alluvialCases = buildAlluvialCases();
+  for (const yStr of ALL_YEARS) {
+    const yr = parseInt(yStr, 10);
+    let totalUSD = 0;
+    for (const c of alluvialCases) {
+      const st = getCaseStateAt(c, yr);
+      if (st && ['pending', 'not_paid', 'enforced', 'paid'].includes(st)) {
+        const amtM = (c.status === 'Decided in favour of investor')
+          ? (c.awardM ?? c.claimM ?? 50)
+          : (c.claimM ?? 50);
+        totalUSD += amtM;
+      }
+    }
+    // Convert from USD Millions to EUR Billions (1 EUR = 1.1 USD)
+    liabilityMap[yStr] = totalUSD / 1100;
+  }
+
   const evtByYear = {};
   for (const ev of timelineData.events) {
     const yr = String(parseInt(ev.date.slice(0, 4)));
@@ -1933,6 +1955,31 @@ function renderEconChart() {
           order: 3,
           spanGaps: false,
         },
+        {
+          type: "line",
+          label: "0.5% Spain GDP (B€)",
+          data: ALL_YEARS.map(y => gdpMap[y] ?? null),
+          borderColor: "#8b5cf6",
+          backgroundColor: "transparent",
+          borderDash: [5, 5],
+          borderWidth: 2,
+          pointRadius: 0,
+          yAxisID: "yEcon",
+          order: 4,
+          spanGaps: true,
+        },
+        {
+          type: "line",
+          label: "Cumulative ISDS liability (B€)",
+          data: ALL_YEARS.map(y => liabilityMap[y] ?? null),
+          borderColor: "#1f2937",
+          backgroundColor: "rgba(31,41,55,0.04)",
+          borderWidth: 2.5,
+          pointRadius: 2.5,
+          yAxisID: "yEcon",
+          order: 0,
+          spanGaps: true,
+        },
       ],
     },
     options: {
@@ -1948,6 +1995,8 @@ function renderEconChart() {
               const lines = evts ? evts.labels.map(l => "  • " + l) : [];
               if (invMap[yr] != null) lines.push("  Investment: €" + invMap[yr].toFixed(2) + "B (est.)");
               if (subMap[yr] != null) lines.push("  Support cost: €" + subMap[yr].toFixed(2) + "B" + (subConfirmed[yr] ? " ✓" : " (est.)"));
+              if (gdpMap[yr] != null) lines.push("  0.5% GDP: €" + gdpMap[yr].toFixed(2) + "B");
+              if (liabilityMap[yr] != null) lines.push("  ISDS Liability: €" + liabilityMap[yr].toFixed(2) + "B");
               return lines;
             },
           },
