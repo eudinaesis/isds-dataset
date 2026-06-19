@@ -1497,24 +1497,54 @@ function renderOutcomes(outcomes) {
 // Ultimate economic-owner nationality, keyed by case number.
 // Source: ECT_Spain_Claims_Ultimate_Ownership.md. Cases not listed => unknown (gray).
 const ULT_OWNER = {
+  1318: "Argentina",             // Maffezini v. Spain
+  916: "Diversified",           // The PV Investors — 26-investor consortium
   821: "Spain",                 // Charanne — round-tripping (Isolux/Alonso bros.)
-  722: "United States",         // NextEra — Florida utility via Dutch shells
-  720: "United Arab Emirates",  // Masdar — Mubadala (Abu Dhabi)
+  794: "Germany",               // RREEF — Deutsche Bank / DWS
+  775: "Spain",                 // Isolux Infrastructure — round-tripping / PSP
   774: "France",                // Infrastructure Services / Antin — Paris PE
   763: "United Kingdom",        // Eiser — London infra fund
-  916: "Diversified",           // The PV Investors — 26-investor consortium
+  759: "Spain",                 // CSP Equity — Abengoa S.A.
   729: "Germany",               // RWE Innogy
+  727: "Diversified",           // RENERGY — Marguerite Fund
+  722: "United States",         // NextEra — Florida utility via Dutch shells
+  720: "United Arab Emirates",  // Masdar — Mubadala (Abu Dhabi)
+  713: "Canada",                // InfraRed — Sun Life Financial
+  678: "United Kingdom",        // Watkins — UK infra via Luxembourg
+  673: "Germany",               // STEAG — Asterion / German utilities
   672: "Germany",               // Stadtwerke München (City of Munich)
+  657: "United Kingdom",        // OperaFund — London PE via Malta
+  656: "Portugal",              // Novenergia — Portuguese capital, later Total Eren (FR)
   644: "Germany",               // Landesbank Baden-Württemberg — German state-owned bank
   643: "Germany",               // KS Invest / TLS Invest — German solar investors
-  622: "Germany",               // E.ON — German utility giant
-  597: "United Kingdom",        // 9REN — First State Investments (UK/AUS)
-  656: "Portugal",              // Novenergia — Portuguese capital, later Total Eren (FR)
-  620: "France",                // Cube — Paris infra managers
-  610: "Germany",               // BayWa r.e.
+  642: "Germany",               // Kruck — German private retail investors
   639: "Japan",                 // JGC
-  657: "United Kingdom",        // OperaFund — London PE via Malta
-  678: "United Kingdom",        // Watkins — UK infra via Luxembourg
+  636: "Switzerland",           // Hydro Energy — Alpiq Holding AG
+  622: "Germany",               // E.ON — German utility giant
+  620: "France",                // Cube — Paris infra managers
+  616: "France",                // Cavalum — Mirova / Groupe BPCE
+  610: "Germany",               // BayWa r.e.
+  603: "Spain",                 // Alten — Alten Energías Renovables
+  597: "United Kingdom",        // 9REN — First State Investments (UK/AUS)
+  567: "United Kingdom",        // Infracapital — M&G plc
+  562: "Diversified",           // Green Power — Green Power Partners K/S
+  550: "Japan",                 // Eurus Energy — Toyota Tsusho / TEPCO JV
+  545: "France",                // EDF Energies Nouvelles — EDF SA (State owned)
+  536: "Canada",                // Corcoesto — Edgewater Exploration
+  528: "Germany",               // Biram — German private investors
+  513: "Netherlands",           // Triodos — Triodos Bank N.V.
+  499: "Germany",               // Portigon — State of NRW / WestLB successor
+  469: "United States",         // FREIF Eurowind — First Reserve Corporation
+  461: "Germany",               // DCM Energy — German retail solar funds
+  427: "Mexico",                // Valle Ruiz — del Valle family
+  388: "Japan",                 // Itochu Corporation
+  380: "United States",         // GBM Global — SunEdison, Inc.
+  372: "Denmark",               // European Solar Farms — Danish private investors
+  366: "Switzerland",           // EBL — Genossenschaft Elektra Baselland
+  325: "Belgium",               // Sapec — Eduardo de San José family
+  284: "Spain",                 // Canepa Green Energy — Azora Capital
+  243: "Japan",                 // Mitsui & Co.
+  118: "Germany",               // WOC Photovoltaik — White Owl Capital
 };
 
 const ORIGIN_BASE_COLORS = {
@@ -1525,7 +1555,7 @@ const ORIGIN_BASE_COLORS = {
   "Switzerland": "#0ea5e9", "Diversified": "#6366f1", "Belgium": "#7c3aed",
   "Denmark": "#84cc16", "Ireland": "#22c55e", "Sweden": "#eab308",
   "Panama": "#a855f7", "Mexico": "#14b8a6", "Argentina": "#f97316",
-  "Venezuela, Bolivarian": "#fb7185",
+  "Venezuela, Bolivarian": "#fb7185", "Canada": "#e11d48",
 };
 const ORIGIN_FALLBACK = ["#64748b", "#b45309", "#be185d", "#0f766e", "#4338ca", "#9f1239"];
 const ORIGIN_UNKNOWN = "#b4b8c0";
